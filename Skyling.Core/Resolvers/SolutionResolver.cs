@@ -25,22 +25,43 @@ namespace Skyling.Core.Resolvers
         public IEnumerable<Project> Projects => this.CurrentSolution.Projects;
 
         /// <summary>
-        /// Constructor that takes a solution file and loads it for analysis.
+        /// Has our solution been resolved yet.
         /// </summary>
-        /// <param name="solutionFile"></param>
-        public SolutionResolver(string solutionFile) 
+        public bool Loaded { get; private set; } = false;
+
+        public SolutionResolver()
         {
-            workspace.WorkspaceFailed += (sender, args) => Console.WriteLine(args.Diagnostic.Message);
-            LoadSolution(solutionFile);
+            // Set-up diagnostic output for when 
+            workspace.WorkspaceFailed += (sender, args) => logger.Debug($"Couldn't load workspace: {args.Diagnostic.Message}");
         }
 
         /// <summary>
-        /// Load the passed-in solution file asynchronously.
+        /// Constructor that takes a solution file and loads it syncronously.
+        /// </summary>
+        /// <param name="solutionFile"></param>
+        public SolutionResolver(string solutionFile) : this()
+        {
+            LoadAndWait(solutionFile);
+        }
+
+        /// <summary>
+        /// Attempt to load solution and block until it's been fully resolved.
+        /// </summary>
+        /// <param name="solutionFile"></param>
+        public void LoadAndWait(string solutionFile)
+        {
+            LoadSolution(solutionFile);
+            while (!this.Loaded) { }
+        }
+
+        /// <summary>
+        /// Load the passed-in solution file asynchronously. Sets <see cref="Loaded"/> to True when complete.
         /// </summary>
         /// <param name="solutionFile"></param>
         public async void LoadSolution(string solutionFile)
         {
             await workspace.OpenSolutionAsync(solutionFile);
+            this.Loaded = true;
         }
 
         public TypeWalker AnalyzeType(AnalysisContext identity)

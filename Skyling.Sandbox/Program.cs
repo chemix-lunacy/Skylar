@@ -26,10 +26,10 @@ namespace Skyling.Sandbox
             string skylingPath = Path.Combine(root, "Skyling.sln");
             if (File.Exists(skylingPath))
                 return skylingPath;
-            else if (depth >= 7)
+            else if (depth >= 7 || dir.Parent == null)
                 return "";
             else
-                return FindSkylingPath(dir.Parent.FullName, ++depth);
+                return FindSkylingPath(dir.FullName, ++depth);
         }
     }
 }

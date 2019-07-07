@@ -21,7 +21,7 @@ namespace Skyling.Core.Parser
             AnalysisContext ident = obj as AnalysisContext;
             if (ident != null)
             {
-                return this.TypeSymbol == ident.TypeSymbol && this.MethodSymbol == ident.MethodSymbol;
+                return Equals(this.TypeSymbol, ident.TypeSymbol) && Equals(this.MethodSymbol, ident.MethodSymbol);
             }
 
             return base.Equals(obj);

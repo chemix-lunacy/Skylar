@@ -32,7 +32,7 @@ namespace Skyling.Core.Resolvers
         public SolutionResolver()
         {
             // Set-up diagnostic output for when 
-            workspace.WorkspaceFailed += (sender, args) => logger.Debug($"Couldn't load workspace: {args.Diagnostic.Message}");
+            workspace.WorkspaceFailed += (sender, args) => logger.Error($"Couldn't load workspace: {args.Diagnostic.Message}");
         }
 
         /// <summary>

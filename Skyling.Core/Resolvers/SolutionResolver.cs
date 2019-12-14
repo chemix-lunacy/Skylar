@@ -165,7 +165,7 @@ namespace Skyling.Core.Resolvers
                 }
             }
 
-            ISymbol comparedSymbol = prospectiveMethods.FirstOrDefault(val => identity.MethodSymbol.Equals(val));
+            ISymbol comparedSymbol = prospectiveMethods.FirstOrDefault(val => SymbolEqualityComparer.Default.Equals(identity.MethodSymbol, val));
 
             /*
              * In some situations (such as reference assemblies) you can't do a straight-up comparison between symbols as 
@@ -187,7 +187,7 @@ namespace Skyling.Core.Resolvers
 
             return comparedSymbol;
         }
-        
+
         private Dictionary<AnalysisContext, TypeWalker> typeCache = new Dictionary<AnalysisContext, TypeWalker>();
 
         //private TypeWalker AnalyzeExternalType(AnalysisContext identity)
@@ -214,7 +214,7 @@ namespace Skyling.Core.Resolvers
         //            result = fileWalker;
         //        }
         //    }
-            
+
         //    return result;
         //}
 

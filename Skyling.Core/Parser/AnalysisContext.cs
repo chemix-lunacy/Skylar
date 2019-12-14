@@ -7,11 +7,11 @@ namespace Skyling.Core.Parser
     public class AnalysisContext
     {
         private string Identity => this.TypeSymbol?.ToDisplayString() ?? this.GetType().ToString();
-        
+
         public ITypeSymbol TypeSymbol { get; set; }
 
         public IMethodSymbol MethodSymbol { get; set; }
-        
+
         private string assemblyPath;
 
         public string AssemblyPath { get { return assemblyPath ?? this.TypeSymbol?.ContainingAssembly.Identity.Name ?? ""; } set { this.assemblyPath = value; } }
@@ -21,7 +21,7 @@ namespace Skyling.Core.Parser
             AnalysisContext ident = obj as AnalysisContext;
             if (ident != null)
             {
-                return Equals(this.TypeSymbol, ident.TypeSymbol) && Equals(this.MethodSymbol, ident.MethodSymbol);
+                return SymbolEqualityComparer.Default.Equals(this.TypeSymbol, ident.TypeSymbol) && SymbolEqualityComparer.Default.Equals(this.MethodSymbol, ident.MethodSymbol);
             }
 
             return base.Equals(obj);

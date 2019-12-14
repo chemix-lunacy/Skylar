@@ -2,6 +2,7 @@
 using System.Reflection;
 using Skyling.Core.Parser;
 using Skyling.Core.Resolvers;
+using Skyling.ML;
 
 namespace Skyling.Sandbox
 {
@@ -13,6 +14,12 @@ namespace Skyling.Sandbox
             SolutionResolver solution = new SolutionResolver(solutionPath);
             LogicParser parser = new LogicParser(solution);
             parser.GenerateLogicModel();
+
+            BasicBinary ta = new BasicBinary();
+            ta.Train();
+
+            MultiClassification mc = new MultiClassification();
+            mc.Train();
         }
 
         static string FindSkylingPath()

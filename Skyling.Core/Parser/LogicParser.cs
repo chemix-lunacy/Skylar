@@ -16,12 +16,12 @@ namespace Skyling.Core.Parser
             this.solutionResolver = resolver;
         }
 
-        public IEnumerable<FunctionalModel> GenerateLogicModel()
+        public IEnumerable<LogicModel> GenerateLogicModel()
         {
             List<FileWalker> parserOutput = new List<FileWalker>();
             parserOutput.AddRange(this.solutionResolver.AnalyzeProjects());
 
-            return Enumerable.Empty<FunctionalModel>();
+            return Enumerable.Empty<LogicModel>();
         }
     }
 }

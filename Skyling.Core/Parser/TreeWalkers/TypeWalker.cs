@@ -25,7 +25,7 @@ namespace Skyling.Core.Parser.TreeWalkers
             SemanticModel semanticModel = this.Compilation.GetSemanticModel(node.SyntaxTree);
             ISymbol declarationSymbol = semanticModel.GetDeclaredSymbol(node);
             Identity = declarationSymbol;
-            if (!Equals(Identity, declarationSymbol))
+            if (!SymbolEqualityComparer.Default.Equals(Identity, declarationSymbol))
             {
                 StructWalker walker = this.CreateSyntaxWalker<StructWalker>();
                 walker.Visit(node);
@@ -42,7 +42,7 @@ namespace Skyling.Core.Parser.TreeWalkers
             SemanticModel semanticModel = this.Compilation.GetSemanticModel(node.SyntaxTree);
             ISymbol declarationSymbol = semanticModel.GetDeclaredSymbol(node);
             Identity = declarationSymbol;
-            if (!Equals(Identity, semanticModel.GetDeclaredSymbol(node)))
+            if (!SymbolEqualityComparer.Default.Equals(Identity, semanticModel.GetDeclaredSymbol(node)))
             {
                 EnumWalker walker = this.CreateSyntaxWalker<EnumWalker>();
                 walker.Visit(node);
@@ -57,7 +57,7 @@ namespace Skyling.Core.Parser.TreeWalkers
             SemanticModel semanticModel = this.Compilation.GetSemanticModel(node.SyntaxTree);
             ISymbol declarationSymbol = semanticModel.GetDeclaredSymbol(node);
             Identity = declarationSymbol;
-            if (!Equals(Identity, declarationSymbol))
+            if (!SymbolEqualityComparer.Default.Equals(Identity, declarationSymbol))
             {
                 TypeWalker walker = this.CreateSyntaxWalker<TypeWalker>();
                 walker.Visit(node);

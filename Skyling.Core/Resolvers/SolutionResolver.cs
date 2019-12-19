@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Microsoft.Build.Locator;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.MSBuild;
 using NLog;
@@ -18,7 +19,7 @@ namespace Skyling.Core.Resolvers
     {
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
-        private MSBuildWorkspace workspace = MSBuildWorkspace.Create();
+        private MSBuildWorkspace workspace;
 
         public Solution CurrentSolution => this.workspace.CurrentSolution;
 
@@ -31,7 +32,9 @@ namespace Skyling.Core.Resolvers
 
         public SolutionResolver()
         {
-            // Set-up diagnostic output for when 
+            MSBuildLocator.RegisterDefaults();
+
+            workspace = MSBuildWorkspace.Create();
             workspace.WorkspaceFailed += (sender, args) => logger.Error($"Couldn't load workspace: {args.Diagnostic.Message}");
         }
 

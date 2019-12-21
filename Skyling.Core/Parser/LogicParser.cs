@@ -18,7 +18,7 @@ namespace Skyling.Core.Parser
 
         public IEnumerable<LogicModel> GenerateLogicModel()
         {
-            List<FileWalker> parserOutput = new List<FileWalker>();
+            List<CommentsWalker> parserOutput = new List<CommentsWalker>();
             parserOutput.AddRange(this.solutionResolver.AnalyzeProjects());
 
             return Enumerable.Empty<LogicModel>();

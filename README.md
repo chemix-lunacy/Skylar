@@ -9,7 +9,3 @@ This has multiple potential applications:
 * Optimization of existing code. Attaching ratings to each block of code allows multiple forms to be synthesized together to find one with the most optimal rating, depending what you need. Logical comparison can then be used to make sure it still works exactly the same.
 
 This will be experimental for a long time yet.
-
-## Get Involved
-
-If you're interested in getting involved, feel free to contact me or play around with the code yourself. The reposiztories documentation will be built up incrementally as time goes on, so apologies if things may be missing. They'll be there eventually.

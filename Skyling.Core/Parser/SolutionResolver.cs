@@ -3,14 +3,13 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.MSBuild;
 using NLog;
-using Skyling.Core.Parser;
 using Skyling.Core.Parser.TreeWalkers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Skyling.Core.Resolvers
+namespace Skyling.Core.Parser
 {
     /// <summary>
     /// Resolves solution
@@ -21,9 +20,9 @@ namespace Skyling.Core.Resolvers
 
         private MSBuildWorkspace workspace;
 
-        public Solution CurrentSolution => this.workspace.CurrentSolution;
+        public Solution CurrentSolution => workspace.CurrentSolution;
 
-        public IEnumerable<Project> Projects => this.CurrentSolution.Projects;
+        public IEnumerable<Project> Projects => CurrentSolution.Projects;
 
         /// <summary>
         /// Has our solution been resolved yet.
@@ -54,7 +53,7 @@ namespace Skyling.Core.Resolvers
         public void LoadAndWait(string solutionFile)
         {
             LoadSolution(solutionFile);
-            while (!this.Loaded) { }
+            while (!Loaded) { }
         }
 
         /// <summary>
@@ -64,15 +63,15 @@ namespace Skyling.Core.Resolvers
         public async void LoadSolution(string solutionFile)
         {
             await workspace.OpenSolutionAsync(solutionFile);
-            this.Loaded = true;
+            Loaded = true;
         }
 
         public IEnumerable<CommentsWalker> AnalyzeProjects()
         {
             List<CommentsWalker> results = new List<CommentsWalker>();
-            foreach (var project in this.Projects)
+            foreach (var project in Projects)
             {
-                results.AddRange(this.AnalyzeProject(project));
+                results.AddRange(AnalyzeProject(project));
             }
 
             return results;
@@ -80,13 +79,14 @@ namespace Skyling.Core.Resolvers
 
         public IEnumerable<CommentsWalker> AnalyzeProject(string projectName)
         {
-            Project proj = this.Projects.FirstOrDefault(val => val.Name == projectName);
+            Project proj = Projects.FirstOrDefault(val => val.Name == projectName);
             if (proj != null)
-                return this.AnalyzeProject(proj);
+                return AnalyzeProject(proj);
 
             return Enumerable.Empty<CommentsWalker>();
         }
 
+        
         private IEnumerable<CommentsWalker> AnalyzeProject(Project project)
         {
             List<CommentsWalker> fileWalkers = new List<CommentsWalker>();
@@ -102,8 +102,15 @@ namespace Skyling.Core.Resolvers
                 if (compilation != null)
                 {
                     SyntaxTree tree = treeTask.Result;
-                    CommentsWalker walker = new CommentsWalker();
-                    walker.Visit(tree.GetRoot());
+                    SemanticModel semanticModel = compilation.GetSemanticModel(tree, true);
+
+                    foreach (SkylingWalker walker in  new SkylingWalker[] { new CommentsWalker(), new ExpressionWalker(semanticModel) })
+                    {
+                        walker.Visit(tree.GetRoot());
+                    }
+
+                    //CommentsWalker walker = new CommentsWalker();
+                    //walker.Visit(tree.GetRoot());
                     //FileWalker fileWalker = new FileWalker();
                     //fileWalker.File = doc.Name;
                     //fileWalker.Initalize(compilation, this);

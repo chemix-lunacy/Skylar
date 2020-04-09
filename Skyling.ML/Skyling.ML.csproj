@@ -63,6 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BasicBinary.cs" />
+    <Compile Include="Categorizer.cs" />
     <Compile Include="MultiClassification.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

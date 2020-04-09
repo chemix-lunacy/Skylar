@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Skyling.Core.Parser.TreeWalkers
 {
-    public class CommentsWalker : CSharpSyntaxWalker
+    public class CommentsWalker : SkylingWalker
     {
         public CommentsWalker() : base(Microsoft.CodeAnalysis.SyntaxWalkerDepth.StructuredTrivia) { }
 
@@ -49,7 +49,7 @@ namespace Skyling.Core.Parser.TreeWalkers
                 currentParent = currentParent.Parent;
             }
 
-            return null;
+            return currentParent;
         }
 
         public void AddComments(SyntaxNode targetNode, params string[] comments)

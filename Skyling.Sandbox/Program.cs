@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Reflection;
 using Skyling.Core.Parser;
-using Skyling.Core.Resolvers;
 using Skyling.ML;
+using Skyling.Sandbox.Examples;
 
 namespace Skyling.Sandbox
 {
@@ -13,7 +13,12 @@ namespace Skyling.Sandbox
             string solutionPath = FindSkylingPath();
             SolutionResolver solution = new SolutionResolver(solutionPath);
             LogicParser parser = new LogicParser(solution);
-            parser.GenerateLogicModel();
+            parser.GenerateLogicModel("Skyling.Sandbox");
+
+            StringCombining comb = new StringCombining();
+            string resultOne = comb.CombineOne("a", "b", "c");
+            string resultTwo = comb.CombineOne("d", "e", "f");
+            string resultThree = comb.CombineOne("g", "h", "i");
 
             BasicBinary ta = new BasicBinary();
             ta.Train();

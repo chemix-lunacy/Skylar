@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Skyling.Core.Logic
 {
-    interface IOutputConnection
+    public interface IOutputConnection
     {
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Build.Locator;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using NLog;
 using Skyling.Core.Parser.TreeWalkers;
@@ -104,9 +105,13 @@ namespace Skyling.Core.Parser
                     SyntaxTree tree = treeTask.Result;
                     SemanticModel semanticModel = compilation.GetSemanticModel(tree, true);
 
-                    foreach (SkylingWalker walker in  new SkylingWalker[] { new CommentsWalker(), new ExpressionWalker(semanticModel) })
+                    SyntaxNode root = tree.GetRoot();
+                    root.TrackNodes(root.DescendantNodes().OfType<ReturnStatementSyntax>());
+                    new ReturnRewriter(semanticModel, root).Visit(root);
+
+                    foreach (CSharpSyntaxVisitor walker in  new CSharpSyntaxVisitor[] { new CommentsWalker(), new ExpressionWalker(semanticModel) })
                     {
-                        walker.Visit(tree.GetRoot());
+                        walker.Visit(root);
                     }
 
                     //CommentsWalker walker = new CommentsWalker();

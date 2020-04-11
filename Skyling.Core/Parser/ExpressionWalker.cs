@@ -16,7 +16,7 @@ namespace Skyling.Core.Parser
     {
         public ExpressionWalker(SemanticModel model) => traitGen = new TraitDatabase(this.semanticModel = model);
 
-        List<ConnectionPoint> models = new List<ConnectionPoint>();
+        List<ConnectionPoints> models = new List<ConnectionPoints>();
 
         TraitDatabase traitGen;
 
@@ -28,7 +28,7 @@ namespace Skyling.Core.Parser
             if (node.Body != null)
             {
                 TraitCollection traits = traitGen.GetTraits(node);
-                models.Add(new ConnectionPoint(new LogicModel(this.semanticModel.AnalyzeDataFlow(node.Body), ControlFlowGraph.Create(node, this.semanticModel),
+                models.Add(new ConnectionPoints(new LogicModel(this.semanticModel.AnalyzeDataFlow(node.Body), ControlFlowGraph.Create(node, this.semanticModel),
                     traits, node.Body.Statements.ToArray()), this.traitGen));
             }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Skyling.Core.Concepts;
 using System;
@@ -14,8 +15,6 @@ namespace Skyling.Core.Logic
     {
         public ConnectionPoints(LogicModel model, TraitDatabase traitDB) 
         {
-            Contract.Requires(model != null);
-
             foreach (var connection in model.DataFlowAnalysis.DataFlowsIn
                     .Intersect(model.DataFlowAnalysis.ReadInside)
                     .Select(val => new SymbolConnection(val, traitDB.GetTraits(val))))
@@ -25,26 +24,18 @@ namespace Skyling.Core.Logic
                     .Select(val => new SymbolConnection(val, traitDB.GetTraits(val))))
                 OutputConnections.Add(connection);
 
-            foreach (var connection in model.Statements.OfType<ReturnStatementSyntax>()
-                    .Select(val => new ReturnConnection(val, traitDB.GetTraits(val))))
+            foreach (var connection in model.Statements.OfType<ReturnStatementSyntax>().Select(val => model.SemanticModel.GetSymbolInfo(val.Expression)).Where(val => val.Symbol != null)
+                    .Select(val => new SymbolConnection(val.Symbol, traitDB.GetTraits(val.Symbol))))
                 OutputConnections.Add(connection);
-
-            LogicModel = model;
         }
 
-        List<IInputConnection> InputConnections { get; set; } = new List<IInputConnection>();
+        List<SymbolConnection> InputConnections { get; set; } = new List<SymbolConnection>();
         
-        List<IOutputConnection> OutputConnections { get; set; } = new List<IOutputConnection>();
+        List<SymbolConnection> OutputConnections { get; set; } = new List<SymbolConnection>();
 
-        LogicModel LogicModel { get; set; }
-
-        public bool CanConnect(List<IOutputConnection> connetions)
+        public bool CanConnect(List<SymbolConnection> connetions)
         {
-
-
-
             return false;
         }
-
     }
 }

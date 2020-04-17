@@ -18,50 +18,39 @@ namespace Skyling.Core.Parser
     ///     int ret = a + b + c;
     ///     return ret;
     /// </summary>
-    public class ReturnRewriter : CSharpSyntaxRewriter
+    public class ReturnRewriter
     {
-        public ReturnRewriter(SemanticModel semModel, SyntaxNode oldRoot)
-        {
-            semanticModel = semModel;
-            modifiedTree = oldRoot;
-        }
+        private int retValCount = 0;
 
-        SemanticModel semanticModel;
+        public SyntaxNode Rewrite(SemanticModel semanticModel, SyntaxNode root) {
 
-        int retValCount = 0;
+            if (root == null)
+                return null;
 
-        SyntaxNode modifiedTree;
-
-        public override SyntaxNode VisitReturnStatement(ReturnStatementSyntax node)
-        {
-            TypeInfo info = semanticModel.GetTypeInfo(node.Expression);
-            if (info.Type != null && !(node.Expression is IdentifierNameSyntax))
+            IEnumerable<ReturnStatementSyntax> returns = root.DescendantNodes().OfType<ReturnStatementSyntax>();
+            SyntaxNode rewrittenRoot = root.TrackNodes(returns);
+            foreach (ReturnStatementSyntax node in returns) 
             {
-                IdentifierNameSyntax variableName = SyntaxFactory.IdentifierName("_returnValue" + retValCount++);
-                VariableDeclaratorSyntax varDec = SyntaxFactory.VariableDeclarator(variableName.Identifier, null,
-                    SyntaxFactory.EqualsValueClause(node.Expression));
+                TypeInfo info = semanticModel.GetTypeInfo(node.Expression);
+                if (info.Type != null && !(node.Expression is IdentifierNameSyntax))
+                {
+                    IdentifierNameSyntax variableName = SyntaxFactory.IdentifierName("_returnValue" + retValCount++);
+                    VariableDeclaratorSyntax varDec = SyntaxFactory.VariableDeclarator(variableName.Identifier, null,
+                        SyntaxFactory.EqualsValueClause(node.Expression));
 
-                modifiedTree.TrackNodes(new []{ node });
-                ReturnStatementSyntax movedReturn1 = modifiedTree.GetCurrentNode(node);
+                    VariableDeclarationSyntax varDecSyntax = SyntaxFactory.VariableDeclaration(
+                        SyntaxFactory.ParseTypeName(info.Type.ToMinimalDisplayString(semanticModel, 0)),
+                        new SeparatedSyntaxList<VariableDeclaratorSyntax>().Add(varDec));
+                    LocalDeclarationStatementSyntax localDec = SyntaxFactory.LocalDeclarationStatement(varDecSyntax);
 
-                //SyntaxFactory.GenericName(info.Type.Name)
-                VariableDeclarationSyntax varDecSyntax = SyntaxFactory.VariableDeclaration(SyntaxFactory.GenericName(info.Type.Name), 
-                    new SeparatedSyntaxList<VariableDeclaratorSyntax>().Add(varDec));
-                LocalDeclarationStatementSyntax localDec = SyntaxFactory.LocalDeclarationStatement(varDecSyntax);
-                modifiedTree = modifiedTree.InsertNodesBefore(node, new[] { localDec });
-                ReturnStatementSyntax movedReturn = modifiedTree.GetCurrentNode(node);
-                modifiedTree = modifiedTree.ReplaceNode(movedReturn, movedReturn.WithExpression(variableName));
-
-                //node.WithExpression(SyntaxFactory)
-                //SyntaxFactory.AssignmentExpression
-                //node.with
+                    ReturnStatementSyntax movedReturn = rewrittenRoot.GetCurrentNode(node);
+                    rewrittenRoot = rewrittenRoot.InsertNodesBefore(movedReturn ?? node, new[] { localDec });
+                    movedReturn = rewrittenRoot.GetCurrentNode(node);
+                    rewrittenRoot = rewrittenRoot.ReplaceNode(movedReturn, movedReturn.WithExpression(variableName));
+                }
             }
 
-            //SyntaxFactory.DeclarationExpression(node.Expression)
-            //SyntaxFactory.AssignmentExpression
-            //node.with
-
-            return base.VisitReturnStatement(node);
+            return rewrittenRoot;
         }
     }
 }

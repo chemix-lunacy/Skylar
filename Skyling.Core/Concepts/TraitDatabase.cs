@@ -12,8 +12,7 @@ namespace Skyling.Core.Concepts
 
         private SemanticModel semanticModel;
         private Dictionary<ISymbol, TraitCollection> symbolTraits = new Dictionary<ISymbol, TraitCollection>();
-        private Dictionary<MethodDeclarationSyntax, TraitCollection> methodTraits = new Dictionary<MethodDeclarationSyntax, TraitCollection>();
-        private Dictionary<ReturnStatementSyntax, TraitCollection> returnTraits = new Dictionary<ReturnStatementSyntax, TraitCollection>();
+        private Dictionary<SyntaxToken, TraitCollection> methodTraits = new Dictionary<SyntaxToken, TraitCollection>();
 
         public void PropogateTraits(MethodDeclarationSyntax methodDecl)
         {
@@ -29,10 +28,10 @@ namespace Skyling.Core.Concepts
                         .SelectMany(val => val.ArgumentList.Arguments)
                         .Select(val => val.ToString().Trim('"'));
 
-                SymbolInfo symbInf = this.semanticModel.GetSymbolInfo(param);
-                if (argsList.Any() && symbInf.Symbol != null)
+                IParameterSymbol symbInf = this.semanticModel.GetDeclaredSymbol(param);
+                if (argsList.Any() && symbInf != null)
                 {
-                    symbolTraits.Add(symbInf.Symbol, new TraitCollection(argsList));
+                    symbolTraits.Add(symbInf, new TraitCollection(argsList));
                 }
             }
 
@@ -56,34 +55,20 @@ namespace Skyling.Core.Concepts
                     returnAttributes.AddRange(attries);
             }
 
-            methodTraits.Add(methodDecl, new TraitCollection(methodAttributes));
-            ReturnWalker walker = new ReturnWalker();
-            walker.Visit(methodDecl);
-            foreach (ReturnStatementSyntax returnStatement in walker.Returns)
-                returnTraits.Add(returnStatement, new TraitCollection(returnAttributes));
-        }
-
-        private class ReturnWalker : CSharpSyntaxWalker 
-        {
-            public List<ReturnStatementSyntax> Returns { get; set; } = new List<ReturnStatementSyntax>();
-            
-            public override void VisitReturnStatement(ReturnStatementSyntax node)
-            {
-                Returns.Add(node);
-                base.VisitReturnStatement(node);
-            }
-        }
-
-        public TraitCollection GetTraits(ReturnStatementSyntax returnNode)
-        {
-            return this.returnTraits.TryGetValue(returnNode, out TraitCollection traits) 
-                ? traits
-                : new TraitCollection();
+            methodTraits.Add(methodDecl.Identifier, new TraitCollection(methodAttributes));
+            foreach (SymbolInfo returnSymbol in methodDecl.DescendantNodes().OfType<ReturnStatementSyntax>()
+                     .Select(val => this.semanticModel.GetSymbolInfo(val.Expression)).Where(val => val.Symbol != null))
+                this.symbolTraits.Add(returnSymbol.Symbol, new TraitCollection(returnAttributes));
         }
 
         public TraitCollection GetTraits(MethodDeclarationSyntax methodNode)
         {
-            return this.methodTraits.TryGetValue(methodNode, out TraitCollection traits)
+            return GetTraits(methodNode.Identifier);
+        }
+
+        public TraitCollection GetTraits(SyntaxToken token)
+        {
+            return this.methodTraits.TryGetValue(token, out TraitCollection traits)
                 ? traits
                 : new TraitCollection();
         }

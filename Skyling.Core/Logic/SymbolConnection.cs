@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace Skyling.Core.Logic
 {
     [DebuggerDisplay("Connection: {this.Symbol}. Traits: {this.Traits}")]
-    public class SymbolConnection : IInputConnection, IOutputConnection
+    public class SymbolConnection
     {
         public SymbolConnection(ISymbol symb, TraitCollection traits) 
         {

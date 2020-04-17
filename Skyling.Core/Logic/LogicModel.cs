@@ -8,23 +8,26 @@ namespace Skyling.Core.Logic
 {
     public class LogicModel
     {
-        public LogicModel(DataFlowAnalysis dfa, ControlFlowGraph cfa, TraitCollection traits, params StatementSyntax[] statementSyntaxes)
+        public LogicModel(SemanticModel sm, DataFlowAnalysis dfa, ControlFlowGraph cfa, TraitCollection traits, params StatementSyntax[] statementSyntaxes)
         {
+            SemanticModel = sm;
             DataFlowAnalysis = dfa;
             ControlFlowGraph = cfa;
             Traits = traits;
             Statements = new List<StatementSyntax>(statementSyntaxes);
         }
 
-        public HashSet<ISymbol> UsedSymbols 
-        { 
-            get 
+        public HashSet<ISymbol> UsedSymbols
+        {
+            get
             {
                 HashSet<ISymbol> used = new HashSet<ISymbol>(this.DataFlowAnalysis.ReadInside);
                 used.UnionWith(this.DataFlowAnalysis.WrittenInside);
                 return used;
-            } 
+            }
         }
+
+        public SemanticModel SemanticModel { get; set; }
 
         public DataFlowAnalysis DataFlowAnalysis { get; set; }
 
@@ -33,5 +36,7 @@ namespace Skyling.Core.Logic
         public List<StatementSyntax> Statements { get; set; } = new List<StatementSyntax>();
 
         public TraitCollection Traits { get; set; } = new TraitCollection();
+
+        public ConnectionPoints ConectionPoints { get; set; }
     }
 }

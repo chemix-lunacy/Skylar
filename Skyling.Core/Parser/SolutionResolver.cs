@@ -103,15 +103,19 @@ namespace Skyling.Core.Parser
                 if (compilation != null)
                 {
                     SyntaxTree tree = treeTask.Result;
+                    //SyntaxTree trackedTree = tree.WithRootAndOptions(root.TrackNodes(root.DescendantNodes().OfType<ReturnStatementSyntax>()), tree.Options);
+
+                    //compilation = compilation.ReplaceSyntaxTree(tree, trackedTree);
+
+                    //SyntaxNode trackedRoot = trackedTree.GetRoot();
                     SemanticModel semanticModel = compilation.GetSemanticModel(tree, true);
+                    SyntaxTree rewrittenTree = tree.WithRootAndOptions(new ReturnRewriter().Rewrite(semanticModel, tree.GetRoot()), tree.Options);
+                    compilation = compilation.ReplaceSyntaxTree(tree, rewrittenTree);
+                    semanticModel = compilation.GetSemanticModel(rewrittenTree, true);
 
-                    SyntaxNode root = tree.GetRoot();
-                    root.TrackNodes(root.DescendantNodes().OfType<ReturnStatementSyntax>());
-                    new ReturnRewriter(semanticModel, root).Visit(root);
-
-                    foreach (CSharpSyntaxVisitor walker in  new CSharpSyntaxVisitor[] { new CommentsWalker(), new ExpressionWalker(semanticModel) })
+                    foreach (CSharpSyntaxVisitor walker in  new CSharpSyntaxVisitor[] { new CommentsWalker(), new LogicModelWalker(semanticModel) })
                     {
-                        walker.Visit(root);
+                        walker.Visit(rewrittenTree.GetRoot());
                     }
 
                     //CommentsWalker walker = new CommentsWalker();

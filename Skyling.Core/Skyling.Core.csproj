@@ -50,14 +50,11 @@
     <Compile Include="Concepts\TraitDatabase.cs" />
     <Compile Include="External\TraitAttribute.cs" />
     <Compile Include="Logic\ConnectionPoints.cs" />
-    <Compile Include="Logic\IInputConnection.cs" />
     <Compile Include="Logic\InferenceEngine.cs" />
     <Compile Include="Logic\SymbolConnection.cs" />
-    <Compile Include="Logic\IOutputConnection.cs" />
-    <Compile Include="Logic\ReturnConnection.cs" />
     <Compile Include="Parser\AnalysisContext.cs" />
     <Compile Include="Logic\LogicModel.cs" />
-    <Compile Include="Parser\ExpressionWalker.cs" />
+    <Compile Include="Parser\LogicModelWalker.cs" />
     <Compile Include="Parser\LogicParser.cs" />
     <Compile Include="Parser\CommentsWalker.cs" />
     <Compile Include="Parser\ReturnRewriter.cs" />

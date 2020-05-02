@@ -27,7 +27,8 @@ namespace Skyling.Core.Parser
             traitGen.PropogateTraits(node);
             if (node.Body != null)
             {
-                LogicModel lm = new LogicModel(this.semanticModel,
+                LogicModel lm = new LogicModel(
+                    this.semanticModel,
                     this.semanticModel.AnalyzeDataFlow(node.Body), 
                     ControlFlowGraph.Create(node, this.semanticModel),
                     traitGen.GetTraits(node), 

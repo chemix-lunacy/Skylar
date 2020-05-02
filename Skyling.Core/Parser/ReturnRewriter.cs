@@ -27,30 +27,56 @@ namespace Skyling.Core.Parser
             if (root == null)
                 return null;
 
-            IEnumerable<ReturnStatementSyntax> returns = root.DescendantNodes().OfType<ReturnStatementSyntax>();
-            SyntaxNode rewrittenRoot = root.TrackNodes(returns);
-            foreach (ReturnStatementSyntax node in returns) 
+            //root.
+
+            List<MethodDeclarationSyntax> classMethods = new List<MethodDeclarationSyntax>();
+            foreach (MethodDeclarationSyntax method in root.DescendantNodes().OfType<MethodDeclarationSyntax>())
             {
-                TypeInfo info = semanticModel.GetTypeInfo(node.Expression);
-                if (info.Type != null && !(node.Expression is IdentifierNameSyntax))
+                if (method.Body == null)
                 {
-                    IdentifierNameSyntax variableName = SyntaxFactory.IdentifierName("_returnValue" + retValCount++);
-                    VariableDeclaratorSyntax varDec = SyntaxFactory.VariableDeclarator(variableName.Identifier, null,
-                        SyntaxFactory.EqualsValueClause(node.Expression));
-
-                    VariableDeclarationSyntax varDecSyntax = SyntaxFactory.VariableDeclaration(
-                        SyntaxFactory.ParseTypeName(info.Type.ToMinimalDisplayString(semanticModel, 0)),
-                        new SeparatedSyntaxList<VariableDeclaratorSyntax>().Add(varDec));
-                    LocalDeclarationStatementSyntax localDec = SyntaxFactory.LocalDeclarationStatement(varDecSyntax);
-
-                    ReturnStatementSyntax movedReturn = rewrittenRoot.GetCurrentNode(node);
-                    rewrittenRoot = rewrittenRoot.InsertNodesBefore(movedReturn ?? node, new[] { localDec });
-                    movedReturn = rewrittenRoot.GetCurrentNode(node);
-                    rewrittenRoot = rewrittenRoot.ReplaceNode(movedReturn, movedReturn.WithExpression(variableName));
+                    //classMethods.Add(method);
+                    continue;
                 }
+
+                List<StatementSyntax> bodyStatements = new List<StatementSyntax>(method.Body.Statements);
+                IEnumerable<ReturnStatementSyntax> returns = method.Body.Statements.OfType<ReturnStatementSyntax>();
+                foreach (ReturnStatementSyntax ret in returns)
+                {
+                    ExpressionSyntax returnExpression = ret.Expression;
+                    TypeInfo info = semanticModel.GetTypeInfo(returnExpression);
+                    if (info.Type != null && !(returnExpression is IdentifierNameSyntax))
+                    {
+                        IdentifierNameSyntax variableName = SyntaxFactory.IdentifierName("_returnValue" + retValCount++);
+                        VariableDeclaratorSyntax varDec = SyntaxFactory.VariableDeclarator(variableName.Identifier, null,
+                            SyntaxFactory.EqualsValueClause(returnExpression));
+
+                        VariableDeclarationSyntax varDecSyntax = SyntaxFactory.VariableDeclaration(
+                            SyntaxFactory.ParseTypeName(info.Type.ToMinimalDisplayString(semanticModel, 0)),
+                            new SeparatedSyntaxList<VariableDeclaratorSyntax>().Add(varDec));
+                        LocalDeclarationStatementSyntax localDec = SyntaxFactory.LocalDeclarationStatement(varDecSyntax);
+                        ReturnStatementSyntax rewrittenReturn = ret.WithExpression(variableName);
+
+                        int retIndex = bodyStatements.IndexOf(ret);
+                        bodyStatements.RemoveAt(retIndex);
+                        bodyStatements.Insert(retIndex, rewrittenReturn);
+                        bodyStatements.Insert(retIndex, localDec);
+                    }
+                }
+
+                if (returns.Any())
+                    root = root.ReplaceNode(method, method.WithBody(method.Body.WithStatements(new SyntaxList<StatementSyntax>(bodyStatements))));
+
+                //if (returns.Any())
+                //    classMethods.Add(method.WithBody(method.Body.WithStatements(bodyStatements)));
+                //else
+                //    classMethods.Add(method);
             }
 
-            return rewrittenRoot;
+            //root.
+
+            root = root.NormalizeWhitespace();
+
+            return root;
         }
     }
 }

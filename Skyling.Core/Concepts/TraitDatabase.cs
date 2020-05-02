@@ -16,9 +16,15 @@ namespace Skyling.Core.Concepts
 
         public void PropogateTraits(MethodDeclarationSyntax methodDecl)
         {
-            if (methodDecl == null)
+            this.PropogateTraits(methodDecl, new HashSet<SyntaxToken>());
+        }
+
+        public void PropogateTraits(MethodDeclarationSyntax methodDecl, HashSet<SyntaxToken> recursionGuard)
+        {
+            if (methodDecl == null || recursionGuard.Contains(methodDecl.Identifier) || methodTraits.ContainsKey(methodDecl.Identifier))
                 return;
 
+            recursionGuard.Add(methodDecl.Identifier);
             foreach (ParameterSyntax param in methodDecl.ParameterList.Parameters)
             {
                 var argsList = param.AttributeLists
@@ -55,10 +61,42 @@ namespace Skyling.Core.Concepts
                     returnAttributes.AddRange(attries);
             }
 
+            IMethodSymbol methSymb = this.semanticModel.GetDeclaredSymbol(methodDecl);
+            if (methSymb != null)
+            {
+                foreach (MethodDeclarationSyntax methodImplementations in methSymb.DeclaringSyntaxReferences
+                    .Select(val => val.GetSyntax()).OfType<MethodDeclarationSyntax>())
+                {
+                    this.GetTraits(methodImplementations);
+                }
+            }
+
             methodTraits.Add(methodDecl.Identifier, new TraitCollection(methodAttributes));
             foreach (SymbolInfo returnSymbol in methodDecl.DescendantNodes().OfType<ReturnStatementSyntax>()
                      .Select(val => this.semanticModel.GetSymbolInfo(val.Expression)).Where(val => val.Symbol != null))
                 this.symbolTraits.Add(returnSymbol.Symbol, new TraitCollection(returnAttributes));
+
+            foreach (AssignmentExpressionSyntax assign in methodDecl.DescendantNodes().OfType<AssignmentExpressionSyntax>())
+            {
+                if (assign.Left is IdentifierNameSyntax ident) 
+                {
+                    SymbolInfo symbolInfo = this.semanticModel.GetSymbolInfo(ident);
+                    if (symbolInfo.Symbol != null && assign.Right is InvocationExpressionSyntax rhs)
+                    {
+                        //TraitCollection existingTraits, rhsTraits;
+                        //if (methodTraits.TryGetValue(rhs, out rhsTraits)) 
+                        //{ 
+                        //    if (!symbolTraits.TryGetValue(symbolInfo.Symbol, out existingTraits))
+                        //    {
+                        //        existingTraits = new TraitCollection();
+                        //        symbolTraits.Add(symbolInfo.Symbol, existingTraits);
+                        //    }
+
+                        //    existingTraits.Traits.AddRange(rhsTraits.Traits);
+                        //}
+                    }
+                }
+            }
         }
 
         public TraitCollection GetTraits(MethodDeclarationSyntax methodNode)

@@ -14,7 +14,7 @@ namespace Skyling.Core.Concepts
 
         public TraitCollection(IEnumerable<string> vals) => Traits.AddRange(vals.Select(val => new Trait(val)));
 
-        List<Trait> Traits { get; set; } = new List<Trait>();
+        public List<Trait> Traits { get; set; } = new List<Trait>();
         
         private string DebuggerValue => !this.Traits.Any() ? "" : this.Traits.Select(val => val.Value).Aggregate((longest, next) => longest + ", " + next);
     }

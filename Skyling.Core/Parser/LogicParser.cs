@@ -20,7 +20,7 @@ namespace Skyling.Core.Parser
 
         public IEnumerable<LogicModel> GenerateLogicModel(string projectName)
         {
-            List<CommentsWalker> parserOutput = new List<CommentsWalker>();
+            List<PotentialTraitsWalker> parserOutput = new List<PotentialTraitsWalker>();
             parserOutput.AddRange(this.solutionResolver.AnalyzeProject(projectName));
 
             return Enumerable.Empty<LogicModel>();
@@ -28,7 +28,7 @@ namespace Skyling.Core.Parser
 
         public IEnumerable<LogicModel> GenerateLogicModel()
         {
-            List<CommentsWalker> parserOutput = new List<CommentsWalker>();
+            List<PotentialTraitsWalker> parserOutput = new List<PotentialTraitsWalker>();
             parserOutput.AddRange(this.solutionResolver.AnalyzeProjects());
 
             return Enumerable.Empty<LogicModel>();

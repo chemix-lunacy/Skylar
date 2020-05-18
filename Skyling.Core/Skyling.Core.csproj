@@ -54,11 +54,13 @@
     <Compile Include="Logic\SymbolConnection.cs" />
     <Compile Include="Parser\AnalysisContext.cs" />
     <Compile Include="Logic\LogicModel.cs" />
+    <Compile Include="Parser\ExpandReturnsRewriter.cs" />
     <Compile Include="Parser\LogicModelWalker.cs" />
     <Compile Include="Parser\LogicParser.cs" />
-    <Compile Include="Parser\CommentsWalker.cs" />
-    <Compile Include="Parser\ReturnRewriter.cs" />
+    <Compile Include="Parser\PotentialTraitsWalker.cs" />
+    <Compile Include="Parser\SplitReturnsRewriter.cs" />
     <Compile Include="Parser\SkylingWalker.cs" />
+    <Compile Include="Parser\ReturnsRewriter.cs" />
     <Compile Include="Parser\VariableDeclarator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parser\SolutionResolver.cs" />

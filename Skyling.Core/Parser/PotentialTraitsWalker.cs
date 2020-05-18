@@ -10,11 +10,13 @@ using System.Xml.Linq;
 
 namespace Skyling.Core.Parser.TreeWalkers
 {
-    public class CommentsWalker : SkylingWalker
+    public class PotentialTraitsWalker : SkylingWalker
     {
-        public CommentsWalker() : base(Microsoft.CodeAnalysis.SyntaxWalkerDepth.StructuredTrivia) { }
+        public PotentialTraitsWalker() : base(Microsoft.CodeAnalysis.SyntaxWalkerDepth.StructuredTrivia) { }
 
         private Dictionary<SyntaxNode, List<string>> comments = new Dictionary<SyntaxNode, List<string>>();
+
+        private HashSet<string> methodCalls = new HashSet<string>();
 
         public SyntaxNode GetApplicableSyntaxNode(SyntaxTrivia syntaxTriv)
         {
@@ -52,12 +54,28 @@ namespace Skyling.Core.Parser.TreeWalkers
             return currentParent;
         }
 
-        public void AddComments(SyntaxNode targetNode, params string[] comments)
+        private void AddMethodCall(InvocationExpressionSyntax node) 
+        {
+            IdentifierNameSyntax methodName = node.Expression as IdentifierNameSyntax;
+            if (methodName != null)
+                AddMethodCall(methodName.Identifier.ValueText);
+
+            MemberAccessExpressionSyntax member = node.Expression as MemberAccessExpressionSyntax;
+            if (member != null)
+                AddMethodCall(member.Name.Identifier.ValueText);
+        }
+
+        private void AddMethodCall(string name)
+        {
+            methodCalls.Add(name);
+        }
+
+        private void AddComments(SyntaxNode targetNode, params string[] comments)
         {
             AddComments(targetNode, comments.ToList());
         }
 
-        public void AddComments(SyntaxNode targetNode, IEnumerable<string> appliedComments)
+        private void AddComments(SyntaxNode targetNode, IEnumerable<string> appliedComments)
         {
             if (appliedComments == null || !appliedComments.Any() || targetNode == null)
                 return;
@@ -130,6 +148,12 @@ namespace Skyling.Core.Parser.TreeWalkers
             AddComments(syntaxNode, node.Identifier.ValueText);
 
             base.VisitPropertyDeclaration(node);
+        }
+
+        public override void VisitInvocationExpression(InvocationExpressionSyntax node)
+        {
+            AddMethodCall(node);
+            base.VisitInvocationExpression(node);
         }
     }
 }

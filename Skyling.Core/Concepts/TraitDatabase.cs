@@ -28,11 +28,11 @@ namespace Skyling.Core.Concepts
             foreach (ParameterSyntax param in methodDecl.ParameterList.Parameters)
             {
                 var argsList = param.AttributeLists
-                        .SelectMany(val => val.Attributes)
-                        .Where(val => val.Name.ToString() == "Trait")
-                        .Where(val => val.ArgumentList != null)
-                        .SelectMany(val => val.ArgumentList.Arguments)
-                        .Select(val => val.ToString().Trim('"'));
+                    .SelectMany(val => val.Attributes)
+                    .Where(val => val.Name.ToString() == "Trait")
+                    .Where(val => val.ArgumentList != null)
+                    .SelectMany(val => val.ArgumentList.Arguments)
+                    .Select(val => val.ToString().Trim('"'));
 
                 IParameterSymbol symbInf = this.semanticModel.GetDeclaredSymbol(param);
                 if (argsList.Any() && symbInf != null)
@@ -72,7 +72,7 @@ namespace Skyling.Core.Concepts
             }
 
             methodTraits.Add(methodDecl.Identifier, new TraitCollection(methodAttributes));
-            foreach (SymbolInfo returnSymbol in methodDecl.DescendantNodes().OfType<ReturnStatementSyntax>()
+            foreach (SymbolInfo returnSymbol in methodDecl.DescendantNodes().OfType<ReturnStatementSyntax>().Where(val => val.Expression != null)
                      .Select(val => this.semanticModel.GetSymbolInfo(val.Expression)).Where(val => val.Symbol != null))
                 this.symbolTraits.Add(returnSymbol.Symbol, new TraitCollection(returnAttributes));
 

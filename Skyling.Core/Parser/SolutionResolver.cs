@@ -67,9 +67,9 @@ namespace Skyling.Core.Parser
             Loaded = true;
         }
 
-        public IEnumerable<CommentsWalker> AnalyzeProjects()
+        public IEnumerable<PotentialTraitsWalker> AnalyzeProjects()
         {
-            List<CommentsWalker> results = new List<CommentsWalker>();
+            List<PotentialTraitsWalker> results = new List<PotentialTraitsWalker>();
             foreach (var project in Projects)
             {
                 results.AddRange(AnalyzeProject(project));
@@ -78,19 +78,19 @@ namespace Skyling.Core.Parser
             return results;
         }
 
-        public IEnumerable<CommentsWalker> AnalyzeProject(string projectName)
+        public IEnumerable<PotentialTraitsWalker> AnalyzeProject(string projectName)
         {
             Project proj = Projects.FirstOrDefault(val => val.Name == projectName);
             if (proj != null)
                 return AnalyzeProject(proj);
 
-            return Enumerable.Empty<CommentsWalker>();
+            return Enumerable.Empty<PotentialTraitsWalker>();
         }
 
         
-        private IEnumerable<CommentsWalker> AnalyzeProject(Project project)
+        private IEnumerable<PotentialTraitsWalker> AnalyzeProject(Project project)
         {
-            List<CommentsWalker> fileWalkers = new List<CommentsWalker>();
+            List<PotentialTraitsWalker> fileWalkers = new List<PotentialTraitsWalker>();
             foreach (Document doc in project.Documents.Where(val => val.SourceCodeKind == SourceCodeKind.Regular && val.SupportsSyntaxTree && val.SupportsSemanticModel))
             {
                 var treeTask = doc.GetSyntaxTreeAsync();
@@ -103,34 +103,23 @@ namespace Skyling.Core.Parser
                 if (compilation != null)
                 {
                     SyntaxTree tree = treeTask.Result;
-                    //SyntaxTree trackedTree = tree.WithRootAndOptions(root.TrackNodes(root.DescendantNodes().OfType<ReturnStatementSyntax>()), tree.Options);
+                    SyntaxTree blockedTree = tree.WithRootAndOptions(new ExpandReturnsRewriter().Visit(tree.GetRoot()), tree.Options);
+                    compilation = compilation.ReplaceSyntaxTree(tree, blockedTree);
 
-                    //compilation = compilation.ReplaceSyntaxTree(tree, trackedTree);
-
-                    //SyntaxNode trackedRoot = trackedTree.GetRoot();
-                    SemanticModel semanticModel = compilation.GetSemanticModel(tree, true);
-                    SyntaxTree rewrittenTree = tree.WithRootAndOptions(new ReturnRewriter().Rewrite(semanticModel, tree.GetRoot()), tree.Options);
-                    compilation = compilation.ReplaceSyntaxTree(tree, rewrittenTree);
+                    SemanticModel semanticModel = compilation.GetSemanticModel(blockedTree, true);
+                    SyntaxTree rewrittenTree = tree.WithRootAndOptions(new SplitReturnsRewriter(semanticModel).Visit(blockedTree.GetRoot()).NormalizeWhitespace(), tree.Options);
+                    compilation = compilation.ReplaceSyntaxTree(blockedTree, rewrittenTree);
                     semanticModel = compilation.GetSemanticModel(rewrittenTree, true);
 
-                    CSharpSyntaxVisitor[] walkers = new CSharpSyntaxVisitor[] { new CommentsWalker(), new LogicModelWalker(semanticModel) };
+                    CSharpSyntaxVisitor[] walkers = new CSharpSyntaxVisitor[] { new PotentialTraitsWalker(), new LogicModelWalker(semanticModel) };
                     foreach (CSharpSyntaxVisitor walker in walkers)
                     {
                         walker.Visit(rewrittenTree.GetRoot());
                     }
-
-                    //CommentsWalker walker = new CommentsWalker();
-                    //walker.Visit(tree.GetRoot());
-                    //FileWalker fileWalker = new FileWalker();
-                    //fileWalker.File = doc.Name;
-                    //fileWalker.Initalize(compilation, this);
-                    //fileWalker.Visit(tree.GetRoot());
-                    //fileWalkers.Add(fileWalker);
                 }
             }
 
             return fileWalkers;
         }
-
     }
 }

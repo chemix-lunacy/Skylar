@@ -10,6 +10,7 @@ namespace Skyling.Sandbox
     {
         static void Main(string[] args)
         {
+            // Testing commit.
             string solutionPath = FindSkylingPath();
             SolutionResolver solution = new SolutionResolver(solutionPath);
             LogicParser parser = new LogicParser(solution);

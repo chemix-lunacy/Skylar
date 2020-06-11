@@ -8,7 +8,7 @@ namespace Skyling.Core.Logic
 {
     public class LogicModel
     {
-        public LogicModel(SemanticModel sm, DataFlowAnalysis dfa, ControlFlowGraph cfa, TraitCollection traits, params StatementSyntax[] statementSyntaxes)
+        public LogicModel(SemanticModel sm, DataFlowAnalysis dfa, ControlFlowGraph cfa, TraitsSet traits, params StatementSyntax[] statementSyntaxes)
         {
             SemanticModel = sm;
             DataFlowAnalysis = dfa;
@@ -35,7 +35,7 @@ namespace Skyling.Core.Logic
 
         public List<StatementSyntax> Statements { get; set; } = new List<StatementSyntax>();
 
-        public TraitCollection Traits { get; set; } = new TraitCollection();
+        public TraitsSet Traits { get; set; } = new TraitsSet();
 
         public ConnectionPoints ConectionPoints { get; set; }
     }

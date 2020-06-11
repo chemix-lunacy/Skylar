@@ -111,7 +111,7 @@ namespace Skyling.Core.Parser
                     compilation = compilation.ReplaceSyntaxTree(blockedTree, rewrittenTree);
                     semanticModel = compilation.GetSemanticModel(rewrittenTree, true);
 
-                    CSharpSyntaxVisitor[] walkers = new CSharpSyntaxVisitor[] { new PotentialTraitsWalker(), new LogicModelWalker(semanticModel) };
+                    CSharpSyntaxVisitor[] walkers = new CSharpSyntaxVisitor[] { new PotentialTraitsWalker(semanticModel), new LogicModelWalker(semanticModel) };
                     foreach (CSharpSyntaxVisitor walker in walkers)
                     {
                         walker.Visit(rewrittenTree.GetRoot());

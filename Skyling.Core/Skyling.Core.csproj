@@ -45,9 +45,8 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Concepts\Trait.cs" />
-    <Compile Include="Concepts\TraitCollection.cs" />
-    <Compile Include="Concepts\TraitDatabase.cs" />
+    <Compile Include="Concepts\TraitsSet.cs" />
+    <Compile Include="Concepts\TraitsStorage.cs" />
     <Compile Include="External\TraitAttribute.cs" />
     <Compile Include="Logic\ConnectionPoints.cs" />
     <Compile Include="Logic\InferenceEngine.cs" />

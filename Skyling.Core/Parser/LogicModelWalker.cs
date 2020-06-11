@@ -14,17 +14,16 @@ namespace Skyling.Core.Parser
 {
     public class LogicModelWalker : SkylingWalker
     {
-        public LogicModelWalker(SemanticModel model) => traitGen = new TraitDatabase(this.semanticModel = model);
+        public LogicModelWalker(SemanticModel model) => traitGen = new TraitsStorage(this.semanticModel = model);
 
         List<LogicModel> models = new List<LogicModel>();
 
-        TraitDatabase traitGen;
+        TraitsStorage traitGen;
 
         SemanticModel semanticModel;
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            traitGen.PropogateTraits(node);
             if (node.Body != null)
             {
                 LogicModel lm = new LogicModel(

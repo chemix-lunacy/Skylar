@@ -12,13 +12,13 @@ namespace Skyling.Core.Logic
     [DebuggerDisplay("Connection: {this.Symbol}. Traits: {this.Traits}")]
     public class SymbolConnection
     {
-        public SymbolConnection(ISymbol symb, TraitCollection traits) 
+        public SymbolConnection(ISymbol symb, TraitsSet traits) 
         {
             Symbol = symb;
             Traits = traits;
         }
 
-        TraitCollection Traits { get; set; } = new TraitCollection();
+        TraitsSet Traits { get; set; } = new TraitsSet();
 
         ISymbol Symbol { get; set; }
     }

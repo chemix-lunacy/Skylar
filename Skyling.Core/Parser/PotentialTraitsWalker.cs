@@ -1,22 +1,34 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Skyling.Core.Concepts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Skyling.Core.Parser.TreeWalkers
 {
+    /// <summary>
+    /// Attempts to work out traits from a syntax tree.
+    /// 
+    /// Method Trait: Attempt at contextualization of what the method does, a combination of comments and operations.
+    /// Value Trait: Variable name / method call name (if available). If operations are involved add those as a text, such as 
+    /// name + surname will result in ("add", "name", "surname").
+    /// </summary>
     public class PotentialTraitsWalker : SkylingWalker
     {
-        public PotentialTraitsWalker() : base(Microsoft.CodeAnalysis.SyntaxWalkerDepth.StructuredTrivia) { }
+        public PotentialTraitsWalker(SemanticModel sm) : base(SyntaxWalkerDepth.StructuredTrivia) => semanticModel = sm;
 
-        private Dictionary<SyntaxNode, List<string>> comments = new Dictionary<SyntaxNode, List<string>>();
+        private Dictionary<SyntaxNode, HashSet<string>> comments = new Dictionary<SyntaxNode, HashSet<string>>();
 
-        private HashSet<string> methodCalls = new HashSet<string>();
+        private SemanticModel semanticModel;
+
+        private TraitsStorage traits = new TraitsStorage();
 
         public SyntaxNode GetApplicableSyntaxNode(SyntaxTrivia syntaxTriv)
         {
@@ -43,7 +55,8 @@ namespace Skyling.Core.Parser.TreeWalkers
                     || currentParent.IsKind(SyntaxKind.DestructorDeclaration)
                     || currentParent.IsKind(SyntaxKind.FieldDeclaration)
                     || currentParent.IsKind(SyntaxKind.StructDeclaration)
-                    || currentParent.IsKind(SyntaxKind.PropertyDeclaration))
+                    || currentParent.IsKind(SyntaxKind.PropertyDeclaration)
+                    || currentParent.IsKind(SyntaxKind.VariableDeclarator))
                 {
                     return currentParent;
                 }
@@ -54,21 +67,7 @@ namespace Skyling.Core.Parser.TreeWalkers
             return currentParent;
         }
 
-        private void AddMethodCall(InvocationExpressionSyntax node) 
-        {
-            IdentifierNameSyntax methodName = node.Expression as IdentifierNameSyntax;
-            if (methodName != null)
-                AddMethodCall(methodName.Identifier.ValueText);
-
-            MemberAccessExpressionSyntax member = node.Expression as MemberAccessExpressionSyntax;
-            if (member != null)
-                AddMethodCall(member.Name.Identifier.ValueText);
-        }
-
-        private void AddMethodCall(string name)
-        {
-            methodCalls.Add(name);
-        }
+        #region Comments
 
         private void AddComments(SyntaxNode targetNode, params string[] comments)
         {
@@ -80,13 +79,13 @@ namespace Skyling.Core.Parser.TreeWalkers
             if (appliedComments == null || !appliedComments.Any() || targetNode == null)
                 return;
 
-            List<string> commentsList;
+            HashSet<string> commentsList;
             if (!comments.TryGetValue(targetNode, out commentsList))
             {
-                commentsList = comments[targetNode] = new List<string>();
+                commentsList = comments[targetNode] = new HashSet<string>();
             }
 
-            commentsList.AddRange(appliedComments);
+            commentsList.UnionWith(appliedComments);
         }
 
         public override void VisitTrivia(SyntaxTrivia trivia)
@@ -119,11 +118,56 @@ namespace Skyling.Core.Parser.TreeWalkers
             base.VisitDocumentationCommentTrivia(node);
         }
 
+        #endregion
+
+        /// <summary>
+        /// Take an expression and expand it into a resultant TraitsSet. Does not modify existing trait sets, just aggregates them.
+        /// </summary>
+        private TraitsSet ExpandExpression(SyntaxNode node) 
+        {
+            TraitsSet GetTraitsFromNode(SyntaxNode syntaxNode) {
+                SymbolInfo symb = semanticModel.GetSymbolInfo(syntaxNode);
+                return symb.Symbol != null ? traits.GetTraits(symb.Symbol) : new TraitsSet();
+            }
+
+            TraitsSet sourceSet = new TraitsSet();
+            if (node is InvocationExpressionSyntax invocation)
+            {
+                var methodProspect = semanticModel.GetSymbolInfo(invocation);
+                if (methodProspect.Symbol is IMethodSymbol methodSymbol)
+                {
+                    sourceSet = traits.GetTraits(methodSymbol);
+                    sourceSet.Add(methodSymbol.Name);
+                    sourceSet.Add(methodSymbol.ContainingType.Name);
+                }
+            }
+
+            if (node is IdentifierNameSyntax identifier)
+            {
+                sourceSet = GetTraitsFromNode(identifier);
+                sourceSet.Add(identifier.Identifier.ValueText);
+            }
+
+            if (node is BinaryExpressionSyntax binaryExpr) 
+            {
+                sourceSet = ExpandExpression(binaryExpr.Left).Union(ExpandExpression(binaryExpr.Right));
+                sourceSet.Add(binaryExpr.OperatorToken.ValueText);
+            }
+
+            return new TraitsSet(sourceSet);
+        }
+
         public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
             if (node != null)
             {
-                AddComments(GetApplicableSyntaxNode(node), node.Identifier.ValueText);
+                ISymbol symb = semanticModel.GetDeclaredSymbol(node);
+                if (!symb.Name.StartsWith(SplitReturnsRewriter.ReturnVariableName, StringComparison.Ordinal))
+                    traits.AddSymbolTrait(symb, symb.Name);
+                else
+                    traits.AddSymbolTrait(symb, semanticModel.GetDeclaredSymbol(node.FirstAncestorOrSelf<MethodDeclarationSyntax>()).Name);
+
+                traits.AddSymbolTrait(symb, ExpandExpression(node.Initializer.Value));
             }
 
             base.VisitVariableDeclarator(node);
@@ -131,12 +175,15 @@ namespace Skyling.Core.Parser.TreeWalkers
 
         public override void VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            SyntaxNode syntaxNode = GetApplicableSyntaxNode(node);
+            var methodSymbol = semanticModel.GetDeclaredSymbol(node);
+            if (methodSymbol != null) 
+                traits.AddSymbolTrait(methodSymbol, node.Identifier.ValueText);
 
-            AddComments(syntaxNode, node.Identifier.ValueText);
             foreach (ParameterSyntax paramSyn in node.ParameterList.Parameters) 
             {
-                AddComments(syntaxNode, paramSyn.Identifier.ValueText);
+                var symbolInfo = semanticModel.GetDeclaredSymbol(paramSyn);
+                if (symbolInfo != null)
+                    traits.AddSymbolTrait(symbolInfo, paramSyn.Identifier.ValueText);
             }
 
             base.VisitMethodDeclaration(node);
@@ -148,12 +195,6 @@ namespace Skyling.Core.Parser.TreeWalkers
             AddComments(syntaxNode, node.Identifier.ValueText);
 
             base.VisitPropertyDeclaration(node);
-        }
-
-        public override void VisitInvocationExpression(InvocationExpressionSyntax node)
-        {
-            AddMethodCall(node);
-            base.VisitInvocationExpression(node);
         }
     }
 }

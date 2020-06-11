@@ -13,12 +13,9 @@ namespace Skyling.Sandbox.Examples
 
         [Trait("string", "append")]
         [return: Trait("key")]
-        public string CombineOne([Trait("address")] string one, [Trait("name")]string two, string three) 
+        public string FormatNameAddress([Trait("address")] string address, [Trait("name")]string name, string house) 
         {
-            one = "dave";
-            string four = CombineTwo(one, two, three);
-            val = val + 1;
-            return one + two + three + four;
+            return address + "-" + house  + " and " + name + "lives there.";
         }
 
         [Trait("string", "append")]
@@ -36,6 +33,12 @@ namespace Skyling.Sandbox.Examples
         public string CombineThree(string one, string two, string three)
         {
             return $"{one}{two}{three}";
+        }
+
+        [Trait("string")]
+        public string CombineFour(string three)
+        {
+            return three;
         }
     }
 }

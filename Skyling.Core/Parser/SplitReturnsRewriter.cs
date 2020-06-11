@@ -27,9 +27,11 @@ namespace Skyling.Core.Parser
 
         private int retValCount = 0;
 
+        public static string ReturnVariableName = "_returnValue";
+
         private IEnumerable<StatementSyntax> BuildReturnStatements(ReturnStatementSyntax ret)
         {
-            IdentifierNameSyntax variableName = SyntaxFactory.IdentifierName("_returnValue" + retValCount++);
+            IdentifierNameSyntax variableName = SyntaxFactory.IdentifierName(ReturnVariableName + retValCount++);
             VariableDeclaratorSyntax varDec = SyntaxFactory.VariableDeclarator(variableName.Identifier, null,
                 SyntaxFactory.EqualsValueClause(ret.Expression));
 

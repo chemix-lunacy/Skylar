@@ -13,7 +13,7 @@ namespace Skyling.Core.Logic
 {
     public class ConnectionPoints
     {
-        public ConnectionPoints(LogicModel model, TraitDatabase traitDB) 
+        public ConnectionPoints(LogicModel model, TraitsStorage traitDB) 
         {
             foreach (var connection in model.DataFlowAnalysis.DataFlowsIn
                     .Intersect(model.DataFlowAnalysis.ReadInside)
@@ -24,7 +24,8 @@ namespace Skyling.Core.Logic
                     .Select(val => new SymbolConnection(val, traitDB.GetTraits(val))))
                 OutputConnections.Add(connection);
 
-            foreach (var connection in model.Statements.OfType<ReturnStatementSyntax>().Select(val => model.SemanticModel.GetSymbolInfo(val.Expression)).Where(val => val.Symbol != null)
+            foreach (var connection in model.Statements.OfType<ReturnStatementSyntax>().Select(val => 
+                model.SemanticModel.GetSymbolInfo(val.Expression)).Where(val => val.Symbol != null)
                     .Select(val => new SymbolConnection(val.Symbol, traitDB.GetTraits(val.Symbol))))
                 OutputConnections.Add(connection);
         }

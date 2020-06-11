@@ -17,9 +17,9 @@ namespace Skyling.Sandbox
             parser.GenerateLogicModel("Skyling.Sandbox");
 
             StringCombining comb = new StringCombining();
-            string resultOne = comb.CombineOne("a", "b", "c");
-            string resultTwo = comb.CombineOne("d", "e", "f");
-            string resultThree = comb.CombineOne("g", "h", "i");
+            string resultOne = comb.FormatNameAddress("a", "b", "c");
+            string resultTwo = comb.FormatNameAddress("d", "e", "f");
+            string resultThree = comb.FormatNameAddress("g", "h", "i");
 
             BasicBinary ta = new BasicBinary();
             ta.Train();

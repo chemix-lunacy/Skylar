@@ -14,7 +14,11 @@ namespace Skyling.Core.Parser
 {
     public class LogicModelWalker : SkylingWalker
     {
-        public LogicModelWalker(SemanticModel model) => traitGen = new TraitsStorage(this.semanticModel = model);
+        public LogicModelWalker(SemanticModel model, TraitsStorage traits)
+        {
+            traitGen = traits;
+            semanticModel = model;
+        }
 
         List<LogicModel> models = new List<LogicModel>();
 
@@ -26,11 +30,13 @@ namespace Skyling.Core.Parser
         {
             if (node.Body != null)
             {
+                IMethodSymbol methodSym = this.semanticModel.GetDeclaredSymbol(node);
+
                 LogicModel lm = new LogicModel(
                     this.semanticModel,
                     this.semanticModel.AnalyzeDataFlow(node.Body), 
                     ControlFlowGraph.Create(node, this.semanticModel),
-                    traitGen.GetTraits(node), 
+                    traitGen.GetTraits(methodSym), 
                     node.Body.Statements.ToArray());
                 lm.ConectionPoints = new ConnectionPoints(lm, this.traitGen);
                 models.Add(lm);

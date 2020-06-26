@@ -22,13 +22,17 @@ namespace Skyling.Core.Parser.TreeWalkers
     /// </summary>
     public class PotentialTraitsWalker : SkylingWalker
     {
-        public PotentialTraitsWalker(SemanticModel sm) : base(SyntaxWalkerDepth.StructuredTrivia) => semanticModel = sm;
+        public PotentialTraitsWalker(SemanticModel sm, TraitsStorage storage) : base(SyntaxWalkerDepth.StructuredTrivia)
+        { 
+            semanticModel = sm;
+            this.traits = storage;
+        }
 
         private Dictionary<SyntaxNode, HashSet<string>> comments = new Dictionary<SyntaxNode, HashSet<string>>();
 
         private SemanticModel semanticModel;
 
-        private TraitsStorage traits = new TraitsStorage();
+        private TraitsStorage traits;
 
         public SyntaxNode GetApplicableSyntaxNode(SyntaxTrivia syntaxTriv)
         {
@@ -165,7 +169,7 @@ namespace Skyling.Core.Parser.TreeWalkers
                 if (!symb.Name.StartsWith(SplitReturnsRewriter.ReturnVariableName, StringComparison.Ordinal))
                     traits.AddSymbolTrait(symb, symb.Name);
                 else
-                    traits.AddSymbolTrait(symb, semanticModel.GetDeclaredSymbol(node.FirstAncestorOrSelf<MethodDeclarationSyntax>()).Name);
+                    traits.AddSymbolTrait(symb, symb.ContainingSymbol.Name);
 
                 traits.AddSymbolTrait(symb, ExpandExpression(node.Initializer.Value));
             }

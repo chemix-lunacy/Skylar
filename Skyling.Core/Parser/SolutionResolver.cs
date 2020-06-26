@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.MSBuild;
 using NLog;
+using Skyling.Core.Concepts;
 using Skyling.Core.Parser.TreeWalkers;
 using System;
 using System.Collections.Generic;
@@ -111,7 +112,8 @@ namespace Skyling.Core.Parser
                     compilation = compilation.ReplaceSyntaxTree(blockedTree, rewrittenTree);
                     semanticModel = compilation.GetSemanticModel(rewrittenTree, true);
 
-                    CSharpSyntaxVisitor[] walkers = new CSharpSyntaxVisitor[] { new PotentialTraitsWalker(semanticModel), new LogicModelWalker(semanticModel) };
+                    TraitsStorage traits = new TraitsStorage();
+                    CSharpSyntaxVisitor[] walkers = new CSharpSyntaxVisitor[] { new PotentialTraitsWalker(semanticModel, traits), new LogicModelWalker(semanticModel, traits ) };
                     foreach (CSharpSyntaxVisitor walker in walkers)
                     {
                         walker.Visit(rewrittenTree.GetRoot());

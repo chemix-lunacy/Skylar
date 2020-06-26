@@ -8,14 +8,9 @@ namespace Skyling.Core.Concepts
 {
     public class TraitsStorage
     {
-        public TraitsStorage(SemanticModel semModel) => semanticModel = semModel;
         public TraitsStorage() { }
 
-        private SemanticModel semanticModel;
-
-        public Dictionary<ISymbol, TraitsSet> SymbolTraits { get; set; } = new Dictionary<ISymbol, TraitsSet>();
-
-        public Dictionary<SyntaxToken, TraitsSet> MethodTraits { get; set; } = new Dictionary<SyntaxToken, TraitsSet>();
+        public Dictionary<ISymbol, MethodTraitsStorage> MethodTraits { get; } = new Dictionary<ISymbol, MethodTraitsStorage>();
 
         //public void PropogateTraits(MethodDeclarationSyntax methodDecl)
         //{
@@ -104,37 +99,25 @@ namespace Skyling.Core.Concepts
 
         public void AddSymbolTrait(ISymbol symbol, params string[] newTraits)
         {
-            if (!SymbolTraits.TryGetValue(symbol, out TraitsSet existingTraits))
-                SymbolTraits.Add(symbol, existingTraits = new TraitsSet());
-
-            existingTraits.Traits.UnionWith(newTraits);
+            this.AddSymbolTrait(symbol, new TraitsSet(newTraits));
         }
 
         public void AddSymbolTrait(ISymbol symbol, TraitsSet traitSet)
         {
-            if (!SymbolTraits.TryGetValue(symbol, out TraitsSet existingTraits))
-                SymbolTraits.Add(symbol, existingTraits = new TraitsSet());
+            if (symbol == null)
+                return;
 
-            existingTraits.Traits.UnionWith(traitSet.Traits);
+            if (!MethodTraits.TryGetValue(symbol.ContainingSymbol, out MethodTraitsStorage methodTraits))
+                methodTraits = MethodTraits[symbol] = new MethodTraitsStorage();
+
+            methodTraits.AddSymbolTrait(symbol, traitSet);
         }
 
-        public TraitsSet GetTraits(MethodDeclarationSyntax methodNode)
+        public TraitsSet GetTraits(ISymbol symbol)
         {
-            return GetTraits(methodNode.Identifier);
-        }
-
-        public TraitsSet GetTraits(SyntaxToken token)
-        {
-            return this.MethodTraits.TryGetValue(token, out TraitsSet traits)
-                ? traits
-                : this.MethodTraits[token] = new TraitsSet();
-        }
-
-        public TraitsSet GetTraits(ISymbol symb)
-        {
-            return this.SymbolTraits.TryGetValue(symb, out TraitsSet traits)
-                ? traits
-                : this.SymbolTraits[symb] = new TraitsSet();
+            return symbol != null && MethodTraits.TryGetValue(symbol.ContainingSymbol, out MethodTraitsStorage traits)
+                ? traits.GetTraits(symbol)
+                : new TraitsSet();
         }
     }
 }

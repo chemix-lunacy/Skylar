@@ -48,11 +48,11 @@
     <Compile Include="Concepts\MethodTraitsStorage.cs" />
     <Compile Include="Concepts\TraitsSet.cs" />
     <Compile Include="Concepts\TraitsStorage.cs" />
+    <Compile Include="Decompilation\DecompilationEngine.cs" />
     <Compile Include="External\TraitAttribute.cs" />
     <Compile Include="Logic\ConnectionPoints.cs" />
     <Compile Include="Logic\InferenceEngine.cs" />
     <Compile Include="Logic\SymbolConnection.cs" />
-    <Compile Include="Parser\AnalysisContext.cs" />
     <Compile Include="Logic\LogicModel.cs" />
     <Compile Include="Parser\ExpandReturnsRewriter.cs" />
     <Compile Include="Parser\LogicModelWalker.cs" />
@@ -64,6 +64,7 @@
     <Compile Include="Parser\VariableDeclarator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parser\SolutionResolver.cs" />
+    <Compile Include="SkylingEngine.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -72,6 +73,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="ICSharpCode.Decompiler">
+      <Version>5.0.2.5153</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.Build.Locator">
       <Version>1.2.6</Version>
     </PackageReference>

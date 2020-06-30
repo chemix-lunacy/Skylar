@@ -2,13 +2,10 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Skyling.Core.Concepts;
+using Skyling.Core.Decompilation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Skyling.Core.Parser.TreeWalkers
@@ -22,11 +19,14 @@ namespace Skyling.Core.Parser.TreeWalkers
     /// </summary>
     public class PotentialTraitsWalker : SkylingWalker
     {
-        public PotentialTraitsWalker(SemanticModel sm, TraitsStorage storage) : base(SyntaxWalkerDepth.StructuredTrivia)
+        public PotentialTraitsWalker(SemanticModel sm, TraitsStorage storage, DecompilationEngine decomp) : base(SyntaxWalkerDepth.StructuredTrivia)
         { 
             semanticModel = sm;
-            this.traits = storage;
+            traits = storage;
+            decompEngine = decomp;
         }
+
+        private HashSet<string> orphanedComments = new HashSet<string>();
 
         private Dictionary<SyntaxNode, HashSet<string>> comments = new Dictionary<SyntaxNode, HashSet<string>>();
 
@@ -34,42 +34,7 @@ namespace Skyling.Core.Parser.TreeWalkers
 
         private TraitsStorage traits;
 
-        public SyntaxNode GetApplicableSyntaxNode(SyntaxTrivia syntaxTriv)
-        {
-            return GetApplicableSyntaxNode(syntaxTriv.Token.Parent);
-        }
-
-        public SyntaxNode GetApplicableSyntaxNode(StructuredTriviaSyntax structuredTrivia) 
-        {
-            return GetApplicableSyntaxNode(structuredTrivia?.ParentTrivia.Token.Parent);
-        }
-
-        public SyntaxNode GetApplicableSyntaxNode(SyntaxNode node)
-        {
-            if (node == null)
-                return null;
-
-            var currentParent = node;
-            while (currentParent != null)
-            {
-                if (currentParent.IsKind(SyntaxKind.ClassDeclaration)
-                    || currentParent.IsKind(SyntaxKind.MethodDeclaration)
-                    || currentParent.IsKind(SyntaxKind.EnumDeclaration)
-                    || currentParent.IsKind(SyntaxKind.ConstructorDeclaration)
-                    || currentParent.IsKind(SyntaxKind.DestructorDeclaration)
-                    || currentParent.IsKind(SyntaxKind.FieldDeclaration)
-                    || currentParent.IsKind(SyntaxKind.StructDeclaration)
-                    || currentParent.IsKind(SyntaxKind.PropertyDeclaration)
-                    || currentParent.IsKind(SyntaxKind.VariableDeclarator))
-                {
-                    return currentParent;
-                }
-
-                currentParent = currentParent.Parent;
-            }
-
-            return currentParent;
-        }
+        private DecompilationEngine decompEngine;
 
         #region Comments
 
@@ -97,7 +62,12 @@ namespace Skyling.Core.Parser.TreeWalkers
             if (trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)
                 || trivia.IsKind(SyntaxKind.SingleLineCommentTrivia))
             {
-                AddComments(GetApplicableSyntaxNode(trivia), 
+                orphanedComments.Add(
+                    trivia.ToFullString().Replace("///", ""));
+            }
+            else if (trivia.HasStructure) 
+            {
+                AddComments(trivia.GetStructure(),
                     trivia.ToFullString().Replace("///", ""));
             }
 
@@ -106,8 +76,7 @@ namespace Skyling.Core.Parser.TreeWalkers
 
         public override void VisitDocumentationCommentTrivia(DocumentationCommentTriviaSyntax node)
         {
-            SyntaxNode synt = GetApplicableSyntaxNode(node);
-            if (synt != null) 
+            if (node != null) 
             {
                 List<string> commentsList = new List<string>();
                 var xml = XElement.Parse("<fakeRoot>" + node.ToFullString().Replace("///", "") + "</fakeRoot>");
@@ -116,7 +85,7 @@ namespace Skyling.Core.Parser.TreeWalkers
                     commentsList.Add(val.Value.Trim());
                 }
 
-                AddComments(synt, commentsList);
+                AddComments(node, commentsList);
             }
 
             base.VisitDocumentationCommentTrivia(node);
@@ -193,12 +162,13 @@ namespace Skyling.Core.Parser.TreeWalkers
             base.VisitMethodDeclaration(node);
         }
 
-        public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+        public override void VisitInvocationExpression(InvocationExpressionSyntax node)
         {
-            SyntaxNode syntaxNode = GetApplicableSyntaxNode(node);
-            AddComments(syntaxNode, node.Identifier.ValueText);
+            var symb = semanticModel.GetSymbolInfo(node);
+            if (symb.Symbol != null) 
+                decompEngine.ResolveAssembly(symb.Symbol.ContainingAssembly);
 
-            base.VisitPropertyDeclaration(node);
+            base.VisitInvocationExpression(node);
         }
     }
 }

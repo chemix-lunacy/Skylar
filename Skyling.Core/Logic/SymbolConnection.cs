@@ -1,11 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Skyling.Core.Concepts;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Skyling.Core.Logic
 {

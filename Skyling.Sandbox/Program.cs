@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
+using Skyling.Core;
 using Skyling.Core.Parser;
-using Skyling.ML;
 using Skyling.Sandbox.Examples;
 
 namespace Skyling.Sandbox
@@ -12,7 +12,7 @@ namespace Skyling.Sandbox
         {
             // Testing commit.
             string solutionPath = FindSkylingPath();
-            SolutionResolver solution = new SolutionResolver(solutionPath);
+            SkylingEngine solution = new SkylingEngine(solutionPath);
             LogicParser parser = new LogicParser(solution);
             parser.GenerateLogicModel("Skyling.Sandbox");
 
@@ -21,11 +21,11 @@ namespace Skyling.Sandbox
             string resultTwo = comb.FormatNameAddress("d", "e", "f");
             string resultThree = comb.FormatNameAddress("g", "h", "i");
 
-            BasicBinary ta = new BasicBinary();
-            ta.Train();
+            //BasicBinary ta = new BasicBinary();
+            //ta.Train();
 
-            MultiClassification mc = new MultiClassification();
-            mc.Train();
+            //MultiClassification mc = new MultiClassification();
+            //mc.Train();
         }
 
         static string FindSkylingPath()

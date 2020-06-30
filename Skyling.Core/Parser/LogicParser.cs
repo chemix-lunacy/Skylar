@@ -1,19 +1,15 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Skyling.Core.Logic;
+﻿using Skyling.Core.Logic;
 using Skyling.Core.Parser.TreeWalkers;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Skyling.Core.Parser
 {
     public class LogicParser
     {
-        private SolutionResolver solutionResolver;
+        private SkylingEngine solutionResolver;
 
-        public LogicParser(SolutionResolver resolver)
+        public LogicParser(SkylingEngine resolver)
         {
             this.solutionResolver = resolver;
         }

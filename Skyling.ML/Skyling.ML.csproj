@@ -66,10 +66,12 @@
     <Compile Include="Categorizer.cs" />
     <Compile Include="MultiClassification.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TraitClassifier.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\issues_test.tsv" />
     <None Include="Data\issues_train.tsv" />
+    <None Include="Data\model.zip" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.ML">

@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Skyling.Core.Parser
+namespace Skyling.Core.Parser.Walkers
 {
     public abstract class ReturnsRewriter : CSharpSyntaxRewriter
     {
@@ -13,6 +13,5 @@ namespace Skyling.Core.Parser
             ExpressionSyntax returnExpression = ret.Expression;
             return ret.Expression != null && !(returnExpression is IdentifierNameSyntax);
         }
-
     }
 }

@@ -9,7 +9,7 @@ namespace Skyling.Core.Logic
 {
     public class ConnectionPoints
     {
-        public ConnectionPoints(LogicModel model, TraitsStorage traitDB) 
+        public ConnectionPoints(LogicModel model, TraitResolver traitDB) 
         {
             foreach (var connection in model.DataFlowAnalysis.DataFlowsIn
                     .Intersect(model.DataFlowAnalysis.ReadInside)

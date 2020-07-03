@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace Skyling.Core.Parser
+namespace Skyling.Core.Parser.Walkers
 {
     public class SkylingWalker : CSharpSyntaxWalker
     {

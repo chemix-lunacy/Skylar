@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Skyling.Core.Parser
+namespace Skyling.Core.Parser.Walkers
 {
     /// <summary>
     /// To make things consistent we want to turn all return expressions into assignments followed by returns, so we can uniformly deal with output connections as symbols to expression chains.
@@ -20,7 +20,6 @@ namespace Skyling.Core.Parser
         public SplitReturnsRewriter(SemanticModel sm) => SemanticModel = sm;
 
         private SemanticModel SemanticModel { get; set; }
-
 
         private int retValCount = 0;
 

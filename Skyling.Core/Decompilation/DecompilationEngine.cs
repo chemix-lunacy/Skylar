@@ -12,67 +12,19 @@ namespace Skyling.Core.Decompilation
 {
 	public class DecompilationEngine
     {
-		public class AssemblyPathData 
-		{ 
-			public string Location { get; set; }
-
-			public AssemblyIdentity Identity { get; set; }
-
-			public override bool Equals(object obj)
-			{
-				return obj is AssemblyPathData data ? data.Location == Location : base.Equals(obj);
-			}
-
-			public override int GetHashCode()
-			{
-				return Location != null ? Location.GetHashCode() : base.GetHashCode();
-			}
-		}
-
-		public List<AssemblyPathData> AssemblyPaths { get; set; } = new List<AssemblyPathData>();
+		public IEnumerable<string> ReferencePaths { get; set; } = new List<string>();
 
 		public string OutputDirectory { get; set; } = @"D:\Source\Decompiled Projects";
 
-		public LanguageVersion LanguageVersion { get; set; } = LanguageVersion.Latest;
-
-		public IEnumerable<string> ReferencePaths { get; set; } = new List<string>();
-
-		public SolutionResolver ProjectResolver = new SolutionResolver();
-
-		public void AddProjectPaths(IEnumerable<MetadataReference> references) 
+		public string DecompileAndGetProjectFile(AssemblyPathData data)
 		{
-			// We don't want our main AppDomain poluted as all we really care about are the actual 
-			AppDomain dom = AppDomain.CreateDomain("temp");
-			AssemblyPaths.AddRange(
-				references.Select(val =>
-				{
-					try
-					{
-						// Need to load directly as we have some reference assemblies, so we want to know what the actual dll location is.
-						AssemblyName assemblyName = AssemblyName.GetAssemblyName(val.Display);
-						Assembly assembly = dom.Load(assemblyName);
-						return new AssemblyPathData { Identity = AssemblyIdentity.FromAssemblyDefinition(assembly), Location = assembly.Location };
-					}
-					catch (Exception ex)
-					{
-						return null;
-					}
-				})
-				.Where(val => val != null)
-				.Distinct());
-		}
-
-		public void ResolveAssembly(IAssemblySymbol symbol)
-		{
-			AssemblyPathData data = AssemblyPaths.FirstOrDefault(val => val.Identity == symbol.Identity);
-			if (data != null)
-			{
-				string projectPath = DecompileProject(data);
-				string projectFile = Path.Combine(projectPath, $"{Path.GetFileNameWithoutExtension(data.Location)}.csproj");
-				ProjectResolver.LoadProjectAndWait(projectFile);
-			}
+			string projectPath = DecompileProject(data);
+			return Path.Combine(projectPath, $"{Path.GetFileNameWithoutExtension(data.Location)}.csproj");
 		}
 			 
+		/// <summary>
+		/// Decompiles the project linked to the assembly path data and returns folder where the project has been decompiled.
+		/// </summary>
 		public string DecompileProject(AssemblyPathData pathData)
 		{
 			string projectPath = Path.Combine(OutputDirectory, $"{Path.GetFileNameWithoutExtension(pathData.Location)}-{pathData.Identity.Version}");

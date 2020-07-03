@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Skyling.Core.Parser
+namespace Skyling.Core.Parser.Walkers
 {
     /// <summary>
     /// Expands single-line return expressions into blocked expressions, as we need them in that form later.

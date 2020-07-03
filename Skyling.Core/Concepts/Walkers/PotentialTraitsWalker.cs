@@ -3,12 +3,14 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Skyling.Core.Concepts;
 using Skyling.Core.Decompilation;
+using Skyling.Core.Parser;
+using Skyling.Core.Parser.Walkers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Skyling.Core.Parser.TreeWalkers
+namespace Skyling.Core.Concepts.Walkers
 {
     /// <summary>
     /// Attempts to work out traits from a syntax tree.
@@ -19,11 +21,10 @@ namespace Skyling.Core.Parser.TreeWalkers
     /// </summary>
     public class PotentialTraitsWalker : SkylingWalker
     {
-        public PotentialTraitsWalker(SemanticModel sm, TraitsStorage storage, DecompilationEngine decomp) : base(SyntaxWalkerDepth.StructuredTrivia)
+        public PotentialTraitsWalker(SemanticModel sm, TraitResolver storage) : base(SyntaxWalkerDepth.StructuredTrivia)
         { 
             semanticModel = sm;
             traits = storage;
-            decompEngine = decomp;
         }
 
         private HashSet<string> orphanedComments = new HashSet<string>();
@@ -32,9 +33,7 @@ namespace Skyling.Core.Parser.TreeWalkers
 
         private SemanticModel semanticModel;
 
-        private TraitsStorage traits;
-
-        private DecompilationEngine decompEngine;
+        private TraitResolver traits;
 
         #region Comments
 
@@ -165,8 +164,8 @@ namespace Skyling.Core.Parser.TreeWalkers
         public override void VisitInvocationExpression(InvocationExpressionSyntax node)
         {
             var symb = semanticModel.GetSymbolInfo(node);
-            if (symb.Symbol != null) 
-                decompEngine.ResolveAssembly(symb.Symbol.ContainingAssembly);
+            if (symb.Symbol != null)
+                traits.GetTraits(symb.Symbol);
 
             base.VisitInvocationExpression(node);
         }

@@ -4,14 +4,15 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.FlowAnalysis;
 using Skyling.Core.Concepts;
 using Skyling.Core.Logic;
+using Skyling.Core.Parser.Walkers;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Skyling.Core.Parser
+namespace Skyling.Core.Logic.Walkers
 {
     public class LogicModelWalker : SkylingWalker
     {
-        public LogicModelWalker(SemanticModel model, TraitsStorage traits)
+        public LogicModelWalker(SemanticModel model, TraitResolver traits)
         {
             traitGen = traits;
             semanticModel = model;
@@ -19,7 +20,7 @@ namespace Skyling.Core.Parser
 
         List<LogicModel> models = new List<LogicModel>();
 
-        TraitsStorage traitGen;
+        TraitResolver traitGen;
 
         SemanticModel semanticModel;
 

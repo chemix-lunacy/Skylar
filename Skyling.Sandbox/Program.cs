@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 using Skyling.Core;
-using Skyling.Core.Parser;
+using Skyling.Core.Logic;
 using Skyling.Sandbox.Examples;
 
 namespace Skyling.Sandbox
@@ -12,9 +12,8 @@ namespace Skyling.Sandbox
         {
             // Testing commit.
             string solutionPath = FindSkylingPath();
-            SkylingEngine solution = new SkylingEngine(solutionPath);
-            LogicParser parser = new LogicParser(solution);
-            parser.GenerateLogicModel("Skyling.Sandbox");
+            ConceptualAbstractionResolver solution = new ConceptualAbstractionResolver(solutionPath);
+            solution.AnalyzeProject("Skyling.Sandbox");
 
             StringCombining comb = new StringCombining();
             string resultOne = comb.FormatNameAddress("a", "b", "c");

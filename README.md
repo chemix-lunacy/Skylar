@@ -1,15 +1,9 @@
 # Skyling
 
-Skyling is a contextualization library for C# code, meant to assist in building intelligent developer-focused tools. Giving it a code-base, it'll break down individual expressions, blocks, methods and classes into a form that can then be easily compared, combined or analyzed. Alongside this it will also label each section of code with a human understandable meaning, such as 'validation', 'credit card processor', 'web service', 'dictionary', 'string concatenation'. 
+Experimental C# AI that acts as an assistant to developers, coding alongside them and performing refactorings, refinements and code creation fully autonomously. It does this by taking source code and breaking it down in a way a traditional developer does - by trying to codify the 'mental summarizations' that many developers rely on day-to-day. These summarizations allow people to see phrases, data structures or concepts and then be able to reliably guess about what code is attempting to do, how it's built, and what sort of constraints it labours under. 
 
-This has multiple potential applications:
+For a precise example: develoeprs know what a map/dictionary is, what it's good at, and how to use it, but trying to work these out by using static analysis is tricky, computationally lengthy, or just impossible. This project attempts to bridge this gap allowing for systems to understand source code in a way similar to a developer. Not just syntactically and semantically, but also architecturally and conceptually.
 
-* Automatic refactoring of code and architectural enforcement. Rules can be built that mean code and API's should be clustered together based on a set of labels, and being able to compare before/after to make sure logic hasn't changed.
-* Code synthesis from human understandable words. Saying you want a 'web service' for 'books' that 'validates' based on 'title' will give itenough information to combine existing code into a new form that satisfies your requirements.
-* Optimization of existing code. Attaching ratings to each block of code allows multiple forms to be synthesized together to find one with the most optimal rating, depending what you need. Logical comparison can then be used to make sure it still works exactly the same.
+This will be highly experimental for a long time, but many of the algorithms and concepts will be written in documentation in the future, so please check back later if you're interested. 
 
-This will be experimental for a long time yet.
-
-## Get Involved
-
-If you're interested in getting involved, feel free to contact me or play around with the code yourself. The reposiztories documentation will be built up incrementally as time goes on, so apologies if things may be missing. They'll be there eventually.
+Actual work done in the develop branch.

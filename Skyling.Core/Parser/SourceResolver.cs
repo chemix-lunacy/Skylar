@@ -41,16 +41,16 @@ namespace Skyling.Core.Parser
             return ExternalResolver.GetDocument(assembly, className);
         }
 
-        public Project GetProject(string projectName)
+        public Project GetProject(AssemblyIdentity assemIdent)
         {
-            if (string.IsNullOrEmpty(projectName))
+            if (assemIdent == null)
                 return null;
 
-            var proj = SolutionResolver.GetProject(projectName);
+            var proj = SolutionResolver.GetProject(assemIdent.Name);
             if (proj != null)
                 return proj;
 
-            return ExternalResolver.GetProject(projectName);
+            return ExternalResolver.GetProject(assemIdent);
         }
     }
 }

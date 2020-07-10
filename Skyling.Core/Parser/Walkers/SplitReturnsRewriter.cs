@@ -4,6 +4,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
+using RewrittenReturnsList = System.Collections.Generic.List<(Microsoft.CodeAnalysis.CSharp.Syntax.ReturnStatementSyntax MatchingReturn, System.Collections.Generic.IEnumerable<Microsoft.CodeAnalysis.CSharp.Syntax.StatementSyntax> ReplacementStatements)>;
+
 namespace Skyling.Core.Parser.Walkers
 {
     /// <summary>
@@ -32,8 +34,12 @@ namespace Skyling.Core.Parser.Walkers
                 SyntaxFactory.EqualsValueClause(ret.Expression));
 
             TypeInfo info = SemanticModel.GetTypeInfo(ret.Expression);
+            ITypeSymbol typeSymbol = info.Type;
+            if (typeSymbol == null)
+                return new List<StatementSyntax>();
+
             VariableDeclarationSyntax varDecSyntax = SyntaxFactory.VariableDeclaration(
-                SyntaxFactory.ParseTypeName(info.Type.ToMinimalDisplayString(SemanticModel, 0)),
+                SyntaxFactory.ParseTypeName(typeSymbol.ToMinimalDisplayString(SemanticModel, 0)),
                 new SeparatedSyntaxList<VariableDeclaratorSyntax>().Add(varDec));
             LocalDeclarationStatementSyntax localDec = SyntaxFactory.LocalDeclarationStatement(varDecSyntax);
             ReturnStatementSyntax rewrittenReturn = ret.WithExpression(variableName);
@@ -43,22 +49,31 @@ namespace Skyling.Core.Parser.Walkers
 
         public override SyntaxNode VisitBlock(BlockSyntax node)
         {
-            List<StatementSyntax> bodyStatements = new List<StatementSyntax>(node.Statements);
-            IEnumerable<ReturnStatementSyntax> modifableReturns = node.Statements.OfType<ReturnStatementSyntax>().Where(val => ShouldRewrite(val));
-            foreach (ReturnStatementSyntax ret in modifableReturns)
+            RewrittenReturnsList rewrittenReturns = new RewrittenReturnsList(
+                node.Statements.OfType<ReturnStatementSyntax>().Where(ret => ShouldRewrite(ret)).Select(ret => (ret, BuildReturnStatements(ret))));
+
+            SyntaxNode childNode = base.VisitBlock(node);
+            if (!(childNode is BlockSyntax childBlock))
+                return childNode;
+
+            List<StatementSyntax> bodyStatements = new List<StatementSyntax>(childBlock.Statements);
+            foreach (ReturnStatementSyntax ret in childBlock.Statements.OfType<ReturnStatementSyntax>())
             {
-                int retIndex = bodyStatements.IndexOf(ret);
-                bodyStatements.RemoveAt(retIndex);
-                bodyStatements.InsertRange(retIndex, BuildReturnStatements(ret));
+                // TODO: Hack way to do it, but after a nested block has been re-written all nodes have been orphaned, so we can't do type 
+                // resolution. Fix later if there's a nicer way to do it.
+                var linkedReturn = rewrittenReturns.FirstOrDefault(val => val.MatchingReturn.ToFullString() == ret.ToFullString());
+                if (linkedReturn != default) 
+                {
+                    int index = bodyStatements.IndexOf(ret);
+                    bodyStatements.RemoveAt(index);
+                    bodyStatements.InsertRange(index, linkedReturn.ReplacementStatements);
+                }
             }
 
-            if (modifableReturns.Any())
-            {
-                BlockSyntax rewrittenBlock = node.WithStatements(new SyntaxList<StatementSyntax>(bodyStatements));
-                return base.VisitBlock(rewrittenBlock.NormalizeWhitespace());
-            }
+            if (bodyStatements.Count != childBlock.Statements.Count)
+                return childBlock.WithStatements(new SyntaxList<StatementSyntax>(bodyStatements)).NormalizeWhitespace();
 
-            return base.VisitBlock(node);
+            return childNode;
         }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Skyling.Core.Decompilation
 {
+	[System.Diagnostics.DebuggerDisplay("{Identity.GetDisplayName()}")]
 	public class AssemblyPathData
 	{
 		public string Location { get; set; }

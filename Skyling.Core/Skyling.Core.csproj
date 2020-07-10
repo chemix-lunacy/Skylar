@@ -62,7 +62,6 @@
     <Compile Include="Logic\Walkers\LogicModelWalker.cs" />
     <Compile Include="Concepts\Walkers\PotentialTraitsWalker.cs" />
     <Compile Include="Parser\Walkers\SplitReturnsRewriter.cs" />
-    <Compile Include="Parser\Walkers\SkylingWalker.cs" />
     <Compile Include="Parser\Walkers\ReturnsRewriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parser\SolutionResolver.cs" />

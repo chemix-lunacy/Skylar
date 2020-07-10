@@ -59,26 +59,21 @@ namespace Skyling.Core.Parser
             if (workspace.CurrentSolution.Projects.Any(val => val.FilePath == projectFile))
                 return;
 
-            var awaitable = workspace.OpenProjectAsync(projectFile);
-            awaitable.RunSynchronously();
+            var awaitable = workspace.OpenProjectAsync(projectFile).ConfigureAwait(true).GetAwaiter();
             while (!awaitable.IsCompleted) { }
         }
 
-        public Project GetProject(AssemblyIdentity ident) => GetProject(ident.Name);
+        public Project GetProject(AssemblyIdentity ident) => GetProject(ident?.Name);
 
 
         public Project GetProject(string assemblyName) => Projects.FirstOrDefault(val => val.AssemblyName == assemblyName);
 
-        public Document GetDocument(string assemblyName, string documentName) 
-        {
-            foreach (var proj in Projects.Where(val => val.AssemblyName == assemblyName))
-            {
-                var classDocument = proj.Documents.FirstOrDefault(val => val.Name == documentName);
-                if (classDocument != null)
-                    return classDocument;
-            }
+        public Document GetDocument(AssemblyIdentity identity, string document) => GetDocument(identity?.Name, document);
 
-            return null;
+        public Document GetDocument(string assemblyName, string document) 
+        {
+            Project proj = GetProject(assemblyName);
+            return proj?.Documents.FirstOrDefault(val => val.Name == document);
         }
     }
 }

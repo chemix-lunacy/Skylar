@@ -41,21 +41,37 @@ namespace Skyling.Core
 
         public void AnalyzeProject(string projectName)
         {
-            Project proj = SourceResolver.GetProject(projectName);
+            AnalyzeProject(new AssemblyIdentity(projectName));
+        }
+
+        public void AnalyzeProject(AssemblyIdentity projectIdentity)
+        {
+            Project proj = SourceResolver.GetProject(projectIdentity);
             if (proj != null)
-                AnalyzeProject(SourceResolver.SolutionResolver.GetProject(projectName));
+                AnalyzeProject(proj);
         }
 
         public void AnalyzeProject(Project project)
         {
+            AnalyzeProject(project, null);
+        }
+
+        public void AnalyzeProject(Project project, string className)
+        {
+            if (project == null)
+                return;
+
+            if (!string.IsNullOrEmpty(className) && !className.EndsWith(".cs"))
+                className = $"{className}.cs";
+
             var compilationTask = project.GetCompilationAsync();
             compilationTask.Wait();
 
             CSharpCompilation compilation = compilationTask.Result as CSharpCompilation;
             if (compilation == null)
                 return;
-
-            foreach (Document doc in project.Documents)
+            
+            foreach (Document doc in string.IsNullOrEmpty(className) ? project.Documents : project.Documents.Where(val => val.Name.Contains(className)))
                 AnalyzeDocument(compilation, doc);
         }
 
@@ -82,7 +98,16 @@ namespace Skyling.Core
 
             LogicModelWalker logicModels = new LogicModelWalker(semanticModel, TraitResolver);
             logicModels.Visit(rewrittenTree.GetRoot());
+        }
 
+        public void AnalyzeSymbol(ISymbol symbol)
+        {
+            AssemblyIdentity ident = symbol?.ContainingAssembly?.Identity;
+            if (ident == null)
+                return;
+
+            Project proj = SourceResolver.GetProject(ident);
+            AnalyzeProject(proj, symbol?.ContainingType?.Name);
         }
     }
 }

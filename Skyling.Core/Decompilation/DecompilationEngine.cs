@@ -14,6 +14,7 @@ namespace Skyling.Core.Decompilation
     {
 		public IEnumerable<string> ReferencePaths { get; set; } = new List<string>();
 
+		// TODO: Remove hard-coded path.
 		public string OutputDirectory { get; set; } = @"D:\Source\Decompiled Projects";
 
 		public string DecompileAndGetProjectFile(AssemblyPathData data)

@@ -41,18 +41,15 @@ namespace Skyling.Core.Decompilation
 				.Distinct());
 		}
 
-		public Project GetProject(string projectName)
+		public Project GetProject(AssemblyIdentity identity)
 		{
-			if (string.IsNullOrEmpty(projectName))
-				return null;
-
-			AssemblyPathData data = AssemblyPaths.FirstOrDefault(val => val.Identity.Name == projectName);
+			AssemblyPathData data = AssemblyPaths.FirstOrDefault(val => val.Identity.Name == identity?.Name && val.Identity.Version == identity?.Version);
 			if (data != null)
 			{
 				string projectPath = DecompilationEngine.DecompileProject(data);
 				string projectFile = Path.Combine(projectPath, $"{Path.GetFileNameWithoutExtension(data.Location)}.csproj");
 				ProjectResolver.LoadProjectAndWait(projectFile);
-				return ProjectResolver.GetProject(projectName);
+				return ProjectResolver.GetProject(identity.Name);
 			}
 
 			return null;
@@ -60,17 +57,9 @@ namespace Skyling.Core.Decompilation
 
 		public Document GetDocument(AssemblyIdentity identity, string className)
 		{
-			if (identity == null || string.IsNullOrEmpty(className))
-				return null;
-
-			AssemblyPathData data = AssemblyPaths.FirstOrDefault(val => val.Identity == identity);
-			if (data != null) 
-			{
-				string projectPath = DecompilationEngine.DecompileProject(data);
-				string projectFile = Path.Combine(projectPath, $"{Path.GetFileNameWithoutExtension(data.Location)}.csproj");
-				ProjectResolver.LoadProjectAndWait(projectFile);
-				return ProjectResolver.GetDocument(identity.Name, className);
-			}
+			Project proj = GetProject(identity);
+			if (proj != null)
+				return proj.Documents.FirstOrDefault(val => val.Name == className);
 
 			return null;
 		}
@@ -80,10 +69,10 @@ namespace Skyling.Core.Decompilation
 		/// </summary>
 		public Document GetDocument(ISymbol symbol)
 		{
-			if (symbol?.ContainingAssembly == null)
+			if (symbol?.ContainingAssembly == null || symbol?.ContainingType == null)
 				return null;
 
-			return GetDocument(symbol.ContainingAssembly.Identity, symbol.ContainingType?.Name);
+			return GetDocument(symbol.ContainingAssembly.Identity, symbol.ContainingType.Name);
 		}
 	}
 }

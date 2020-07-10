@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Skyling.Core.Logic.Walkers
 {
-    public class LogicModelWalker : SkylingWalker
+    public class LogicModelWalker : CSharpSyntaxWalker
     {
         public LogicModelWalker(SemanticModel model, TraitResolver traits)
         {

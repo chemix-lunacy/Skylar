@@ -19,7 +19,7 @@ namespace Skyling.Core.Concepts.Walkers
     /// Value Trait: Variable name / method call name (if available). If operations are involved add those as a text, such as 
     /// name + surname will result in ("add", "name", "surname").
     /// </summary>
-    public class PotentialTraitsWalker : SkylingWalker
+    public class PotentialTraitsWalker : CSharpSyntaxWalker
     {
         public PotentialTraitsWalker(SemanticModel sm, TraitResolver storage) : base(SyntaxWalkerDepth.StructuredTrivia)
         { 
@@ -103,6 +103,9 @@ namespace Skyling.Core.Concepts.Walkers
             }
 
             TraitsSet sourceSet = new TraitsSet();
+            if (node == null)
+                return sourceSet;
+
             if (node is InvocationExpressionSyntax invocation)
             {
                 var methodProspect = semanticModel.GetSymbolInfo(invocation);
@@ -137,9 +140,9 @@ namespace Skyling.Core.Concepts.Walkers
                 if (!symb.Name.StartsWith(SplitReturnsRewriter.ReturnVariableName, StringComparison.Ordinal))
                     traits.AddSymbolTrait(symb, symb.Name);
                 else
-                    traits.AddSymbolTrait(symb, symb.ContainingSymbol.Name);
+                    traits.AddSymbolTrait(symb, symb.ContainingSymbol?.Name);
 
-                traits.AddSymbolTrait(symb, ExpandExpression(node.Initializer.Value));
+                traits.AddSymbolTrait(symb, ExpandExpression(node.Initializer?.Value));
             }
 
             base.VisitVariableDeclarator(node);
